@@ -1,5 +1,6 @@
 package com.example.hcd_a3
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +42,12 @@ import androidx.navigation.NavController
 
 @Composable
 fun LoginScreen(navController: NavController) {
+    val optionsVisible = remember { mutableStateOf(false) }
+    val screenReader = remember { mutableStateOf(false) }
+    val languageOption = remember { mutableStateOf(false) }
+    val languageSelected = remember { mutableStateOf("English") }
+    val size = remember { mutableStateOf(0) }
+
     Column(modifier = Modifier
         .fillMaxSize()
         .background(Color(255, 243, 200))){
@@ -141,88 +150,96 @@ fun LoginScreen(navController: NavController) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Spacer(modifier = Modifier.width(12.dp))
 
-                //Settings button
-                Surface(
-                    color = Color(255, 205, 0),
-                    shape = RoundedCornerShape(12.dp)
-                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                {
-                    IconButton(
-                        onClick = { /**/ }
-                    ) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = Color(103, 52, 25)
-                        )
+                AnimatedVisibility(visible = !languageOption.value) {
+                    //Settings button
+                    Surface(
+                        color = Color(255, 205, 0),
+                        shape = RoundedCornerShape(12.dp)
+                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                    {
+                        IconButton(
+                            onClick = { optionsVisible.value = !optionsVisible.value }
+                        ) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = Color(103, 52, 25),
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
                     }
                 }
 
-                //Language option
-                Surface(
-                    color = Color(255, 205, 0),
-                    shape = RoundedCornerShape(12.dp)
-                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                {
-                    IconButton(
-                        onClick = { /**/ }
-                    ) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.globe),
-                            contentDescription = "Settings",
-                            tint = Color(103, 52, 25)
-                        )
-                    }
-                }
+                AnimatedVisibility(visible = optionsVisible.value) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
-                //ScreenReader option
-                Surface(
-                    color = Color(255, 205, 0),
-                    shape = RoundedCornerShape(12.dp)
-                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                {
-                    IconButton(
-                        onClick = { /**/ }
-                    ) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = Color(103, 52, 25)
-                        )
-                    }
-                }
+                        //Language option
+                        Surface(
+                            color = Color(255, 205, 0),
+                            shape = RoundedCornerShape(12.dp)
+                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                        {
+                            IconButton(
+                                onClick = { languageOption.value = !languageOption.value }
+                            ) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.globe),
+                                    contentDescription = "Language",
+                                    tint = Color(103, 52, 25)
+                                )
+                            }
+                        }
 
-                //Increase Size option
-                Surface(
-                    color = Color(255, 205, 0),
-                    shape = RoundedCornerShape(12.dp)
-                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                {
-                    IconButton(
-                        onClick = { /**/ }
-                    ) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = Color(103, 52, 25)
-                        )
-                    }
-                }
+                        //ScreenReader option
+                        Surface(
+                            color = Color(255, 205, 0),
+                            shape = RoundedCornerShape(12.dp)
+                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                        {
+                            IconButton(
+                                onClick = { /**/ }
+                            ) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.lips4),
+                                    contentDescription = "Screen Reader",
+                                    tint = Color(103, 52, 25)
+                                )
+                            }
+                        }
 
-                //Decrease Size option
-                Surface(
-                    color = Color(255, 205, 0),
-                    shape = RoundedCornerShape(12.dp)
-                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                {
-                    IconButton(
-                        onClick = { /**/ }
-                    ) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = Color(103, 52, 25)
-                        )
+                        //Increase Size option
+                        Surface(
+                            color = Color(255, 205, 0),
+                            shape = RoundedCornerShape(12.dp)
+                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                        {
+                            IconButton(
+                                onClick = { /**/ }
+                            ) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.size_up),
+                                    contentDescription = "Settings",
+                                    tint = Color(103, 52, 25)
+                                )
+                            }
+                        }
+
+                        //Decrease Size option
+                        Surface(
+                            color = Color(255, 205, 0),
+                            shape = RoundedCornerShape(12.dp)
+                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                        {
+                            IconButton(
+                                onClick = { /**/ }
+                            ) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.size_down),
+                                    contentDescription = "Settings",
+                                    tint = Color(103, 52, 25)
+                                )
+                            }
+                        }
                     }
                 }
             }
