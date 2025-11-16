@@ -58,7 +58,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -72,18 +74,49 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        //val optionsVisible = remember { mutableStateOf(false) }
+
         setContent {
             HCD_A3Theme {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "Login") {
                     composable("login") { LoginScreen(navController)}
                     composable ("menu") { MenuScreen(navController)}
+                    composable ("test") { Tester(navController)}
                 }
             }
         }
     }
 }
 
+@Composable
+fun Tester(navController: NavController) {
+    Column {
+        // Surface with default (0dp) tonal elevation
+        Surface(
+            modifier = Modifier,
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Text("Background Surface")
+        }
+
+        // Surface with 3dp tonal elevation (e.g., a Navigation Bar)
+        Surface(
+            modifier = Modifier,
+            tonalElevation = 3.dp
+        ) {
+            Text("Elevated Surface (e.g., Navigation Bar)")
+        }
+
+        // Surface with higher tonal elevation (e.g., a Card)
+        Surface(
+            modifier = Modifier,
+            tonalElevation = 8.dp
+        ) {
+            Text("Even More Elevated Surface (e.g., Card)")
+        }
+    }
+}
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
@@ -102,24 +135,27 @@ fun GreetingPreview() {
 
 @Composable
 fun ListItem(item: FoodItem) {
+    val viewModel: LoginViewModel = viewModel()
     Column(modifier = Modifier.padding(8.dp)) {
         Text(
             text = item.name,
-            style = MaterialTheme.typography.bodyLarge
+            fontSize = viewModel.largeText.sp
         )
         Text(
             text = item.ingredients,
-            style = MaterialTheme.typography.bodySmall
+            fontSize = viewModel.smallText.sp
         )
         Text(
             text = "$${item.price}",
-            style = MaterialTheme.typography.bodySmall
+            fontSize = viewModel.smallText.sp
         )
     }
 }
 
 @Composable
 fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: List<String>)*/ {
+    val viewModel: LoginViewModel = viewModel()
+
     val desserts = listOf(
         FoodItem("cake", "chocolate base, chocolate icing", 10),
         FoodItem("ice cream", "chocolate", 7))
@@ -186,7 +222,8 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                         Box(
                             Modifier
                                 .fillMaxWidth()
-                                .height(48.dp)
+                                //make 48 the base height, largeText is defaulted to 16dp
+                                .height((32 + viewModel.largeText).dp)
                                 .background(color = mainColour)
                         ) {
                             // BACK BUTTON (fixed position)
@@ -236,13 +273,27 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                             text = item,
                                             modifier = Modifier
                                                 .padding(horizontal = 12.dp, vertical = 8.dp),
-                                            textAlign = TextAlign.Center
+                                            textAlign = TextAlign.Center,
+                                            fontSize = viewModel.largeText.sp
                                         )
                                     }
                                 }
                             }
                         }
                     }
+                }
+            },
+            bottomBar = {
+                // SCROLLING MENU (underlaps the back button)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .align(Alignment.CenterStart)
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    settings()
                 }
             }
         )
@@ -274,7 +325,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                         .fillMaxHeight(), // Fixed height for each box
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(activeCount[index].toString())
+                                    Text(activeCount[index].toString(), fontSize = viewModel.largeText.sp)
                                 }
                                 Box(
                                     modifier = Modifier
