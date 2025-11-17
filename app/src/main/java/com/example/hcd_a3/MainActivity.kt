@@ -197,8 +197,11 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
 
     val cartVisible = totalOrderCount.value > 0
     val cartExpanded = remember { mutableStateOf(false) }
+
+    //change the amount of inset the order items have to shift by to display the cart icon when adding items
+    var inset = 0.dp
     val rightInset by animateDpAsState(
-        targetValue = if (cartVisible) 56.dp else 0.dp
+        targetValue = if (cartVisible) inset else 0.dp
     )
     val offsetX by animateDpAsState(
         targetValue = if (cartExpanded.value) (-screenWidth * 0.8f) else 0.dp
@@ -226,17 +229,23 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                 .height((32 + viewModel.largeText).dp)
                                 .background(color = mainColour)
                         ) {
-                            // BACK BUTTON (fixed position)
-                            IconButton(
-                                onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
+
+                            Surface(color = mainColour,
                                 modifier = Modifier
-                                    .align(Alignment.CenterStart)
-                                    .zIndex(1f) // stays above the scroll
-                            ) {
-                                Icon(
-                                    Icons.AutoMirrored.Default.ArrowBack,
-                                    contentDescription = "Back"
-                                )
+                                    .zIndex(1f)) // stays above the scroll
+                            {
+                                // BACK BUTTON (fixed position)
+                                IconButton(
+                                    onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                        .fillMaxHeight()
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Default.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
                             }
 
                             // SCROLLING MENU (underlaps the back button)
@@ -258,7 +267,8 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                     Box(
                                         modifier = Modifier
                                             //.fillMaxSize()
-                                            .height(36.dp)
+                                            //make to 36 as base
+                                            .height((20 + viewModel.largeText).dp)
                                             .background(
                                                 color = animatedColor,
                                                 shape = RoundedCornerShape(8.dp)
@@ -319,6 +329,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                     .padding(8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                //COUNT for item
                                 Box(
                                     modifier = Modifier
                                         .weight(0.5f) // Distribute available width equally among boxes
@@ -327,6 +338,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                 ) {
                                     Text(activeCount[index].toString(), fontSize = viewModel.largeText.sp)
                                 }
+                                //DESCRIPTION and PRICE for item
                                 Box(
                                     modifier = Modifier
                                         .weight(4f) // Distribute available width equally among boxes
@@ -337,6 +349,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                     //                                    }
                                     ListItem(item)
                                 }
+                                //ACTION button ADD
                                 Box(
                                     modifier = Modifier
                                         .weight(0.5f) // Distribute available width equally among boxes
@@ -348,6 +361,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                         Icon(Icons.Default.Add, contentDescription = "Add")
                                     }
                                 }
+                                //ACTION button REMOVE
                                 Box(
                                     modifier = Modifier
                                         .weight(0.5f) // Distribute available width equally among boxes
@@ -365,6 +379,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                         }
                     }
                 }
+
                 AnimatedVisibility(visible = cartVisible) {
                     Column(
                         modifier = Modifier
@@ -383,6 +398,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
         }
     }
 
+    //Order Screen
     if (cartExpanded.value) {
         Box(
             Modifier
@@ -400,17 +416,33 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
 
 @Composable
 fun CartButton(count: Int, onClick: () -> Unit) {
-    Box(
+    val viewModel: LoginViewModel = viewModel()
+//    Box(
+//        modifier = Modifier
+//            .padding(4.dp)
+//            .clickable { onClick() }
+//            .background(Color.White, RoundedCornerShape(8.dp))
+//    ) {
+//        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
+//            if (count > 0) {
+//                Text(count.toString(), color = Color.Red, fontSize = viewModel.largeText.sp)
+//            }
+//        }
+//    }
+    Surface(
         modifier = Modifier
-            .padding(4.dp)
-            .clickable { onClick() }
-            .background(Color.White, RoundedCornerShape(8.dp))
-            .padding(8.dp)
+            .clickable { onClick() },
+            //.background(Color.White, RoundedCornerShape(8.dp))
+        shape = RoundedCornerShape(8.dp),
+        color = Color.White
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(12.dp)) {
             Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
             if (count > 0) {
-                Text(count.toString(), color = Color.Red)
+                Text(count.toString(), color = Color.Red, fontSize = viewModel.largeText.sp)
             }
         }
     }

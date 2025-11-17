@@ -250,7 +250,7 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                         ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
                         {
                             IconButton(
-                                onClick = { viewModel.increaseTextSize() }
+                                onClick = { if (viewModel.largeText < 24) viewModel.increaseTextSize() }
                             ) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.size_up),
@@ -267,7 +267,7 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                         ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
                         {
                             IconButton(
-                                onClick = { viewModel.decreaseTextSize() }
+                                onClick = { if (viewModel.largeText > 16) viewModel.decreaseTextSize() }
                             ) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.size_down),
