@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,7 +55,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -139,15 +144,18 @@ fun ListItem(item: FoodItem) {
     Column(modifier = Modifier.padding(8.dp)) {
         Text(
             text = item.name,
-            fontSize = viewModel.largeText.sp
+            fontSize = viewModel.largeText.sp,
+            color = viewModel.oTextColour
         )
         Text(
             text = item.ingredients,
-            fontSize = viewModel.smallText.sp
+            fontSize = viewModel.smallText.sp,
+            color = viewModel.oTextColour
         )
         Text(
             text = "$${item.price}",
-            fontSize = viewModel.smallText.sp
+            fontSize = viewModel.smallText.sp,
+            color = viewModel.oTextColour
         )
     }
 }
@@ -189,9 +197,6 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
     }
     val activeCount = getActiveCount()
 
-    val mainColour = Color(0, 162, 232)
-    val highlightColour = Color.White
-
     val configuration: Configuration = Resources.getSystem().configuration
     val screenWidth = configuration.screenWidthDp.dp
 
@@ -227,10 +232,10 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                 .fillMaxWidth()
                                 //make 48 the base height, largeText is defaulted to 16dp
                                 .height((32 + viewModel.largeText).dp)
-                                .background(color = mainColour)
+                                .background(color = viewModel.topColour)
                         ) {
 
-                            Surface(color = mainColour,
+                            Surface(color = viewModel.topColour, //idk why i coloured this, probably in case i decide to change it later :P
                                 modifier = Modifier
                                     .zIndex(1f)) // stays above the scroll
                             {
@@ -261,7 +266,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                 menu.forEach { item ->
                                     val isSelected = item == selectedCategory.value
                                     val backgroundColour =
-                                        if (isSelected) highlightColour else mainColour
+                                        if (isSelected) viewModel.buttonBackColour else viewModel.buttonColour
                                     val animatedColor by animateColorAsState(targetValue = backgroundColour)
 
                                     Box(
@@ -284,7 +289,8 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                             modifier = Modifier
                                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                                             textAlign = TextAlign.Center,
-                                            fontSize = viewModel.largeText.sp
+                                            fontSize = viewModel.largeText.sp,
+                                            color = viewModel.oTextColour
                                         )
                                     }
                                 }
@@ -297,10 +303,10 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                 // SCROLLING MENU (underlaps the back button)
                 Row(
                     modifier = Modifier
+                        .background(viewModel.bottomColour)
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .align(Alignment.CenterStart)
-                        .padding(bottom = 24.dp),
+                        //.align(Alignment.CenterStart)
+                        .padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     settings()
@@ -309,7 +315,9 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
         )
         { innerPadding ->
             //I've wrapped it up in a row class to allow for the adjusting of space
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier
+                .background(viewModel.secondBackColour)
+                .fillMaxWidth()) {
                 LazyColumn(
                     modifier = Modifier
                         .padding(innerPadding)
@@ -320,7 +328,11 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                         Card(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                                .padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 0.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = viewModel.content,
+                                contentColor = viewModel.oTextColour
+                            )
                         ) {
                             Row(
                                 modifier = Modifier
@@ -336,7 +348,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                         .fillMaxHeight(), // Fixed height for each box
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(activeCount[index].toString(), fontSize = viewModel.largeText.sp)
+                                    Text(activeCount[index].toString(), fontSize = viewModel.largeText.sp, color = viewModel.oTextColour)
                                 }
                                 //DESCRIPTION and PRICE for item
                                 Box(
@@ -352,47 +364,114 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                 //ACTION button ADD
                                 Box(
                                     modifier = Modifier
-                                        .weight(0.5f) // Distribute available width equally among boxes
+                                        .weight(1f) // Distribute available width equally among boxes
                                         .fillMaxHeight() // Fixed height for each box
+                                        .clickable(onClick = { activeCount[index]++ }),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    IconButton(
-                                        onClick = { activeCount[index]++ }
-                                    ) {
+//                                    IconButton(
+//                                        onClick = { activeCount[index]++ }
+//                                    ) {
                                         Icon(Icons.Default.Add, contentDescription = "Add")
-                                    }
+//                                    }
                                 }
                                 //ACTION button REMOVE
                                 Box(
                                     modifier = Modifier
-                                        .weight(0.5f) // Distribute available width equally among boxes
+                                        .weight(1f) // Distribute available width equally among boxes
                                         .fillMaxHeight() // Fixed height for each box
+                                        .clickable(onClick = { if (activeCount[index] > 0) activeCount[index]-- }),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    IconButton(
-                                        onClick = {
-                                            if (activeCount[index] > 0) activeCount[index]--
-                                        }
-                                    ) {
+//                                    IconButton(
+//                                        onClick = {
+//                                            if (activeCount[index] > 0) activeCount[index]--
+//                                        }
+//                                    ) {
                                         Icon(Icons.Default.Delete, contentDescription = "Remove")
-                                    }
+//                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                AnimatedVisibility(visible = cartVisible) {
-                    Column(
-                        modifier = Modifier
-                            .width(56.dp)
-                            .fillMaxHeight()
-                            .background(Color.Transparent),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CartButton(count = totalOrderCount.value) {
-                            cartExpanded.value = true
+//                AnimatedVisibility(visible = cartVisible) {
+//                    Column(
+//                        modifier = Modifier
+//                            .width(56.dp)
+//                            .fillMaxHeight()
+//                            .background(Color.Transparent),
+//                        verticalArrangement = Arrangement.Center,
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        CartButton(count = totalOrderCount.value) {
+//                            cartExpanded.value = true
+//                        }
+//                    }
+//                }
+                //scrollable column
+                Column(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .fillMaxHeight()
+                        .background(Color.Transparent)
+                        .padding(innerPadding)
+                    //verticalArrangement = Arrangement.Center,
+                    //horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    //UP ARROW button
+                    Box(modifier = Modifier
+                        .height(36.dp)
+                        .fillMaxWidth())
+                        //.weight(1f))
+                    {
+                        Surface(
+                            color = viewModel.buttonColour,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        {
+                            IconButton(
+                                onClick = { /**/ }
+                            ) {
+                                Icon(
+                                    modifier = Modifier.rotate(90f),
+                                    imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                    contentDescription = "Scroll Up",
+                                    tint = viewModel.iconsColour
+                                )
+                            }
                         }
                     }
+                    Box(modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)){
+                    }
+                    //DOWN ARROW button
+                    Box(modifier = Modifier
+                        .height(36.dp)
+                        .fillMaxWidth())
+                        //.weight(1f))
+                    {
+                        Surface(
+                            color = viewModel.buttonColour,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        {
+                            IconButton(
+                                onClick = { /**/ }
+                            ) {
+                                Icon(
+                                    modifier = Modifier.rotate(-90f),
+                                    imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                    contentDescription = "Scroll Down",
+                                    tint = viewModel.iconsColour
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         }

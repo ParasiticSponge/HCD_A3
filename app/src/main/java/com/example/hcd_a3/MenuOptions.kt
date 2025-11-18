@@ -62,7 +62,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewMo
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .background(viewModel.background)){
+        .background(viewModel.mainBackColour)){
         Box(modifier = Modifier
                 .fillMaxSize()
                 .weight(4f),
@@ -125,31 +125,31 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewMo
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Log in as:", fontSize = largeText.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                Text(text = "Log in as:", fontSize = largeText.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), color=viewModel.oTextHighlightColour)
                 Button(onClick = { navController.navigate("menu") },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(255, 205, 0), // Sets the background color for the enabled state
+                    colors = ButtonDefaults.buttonColors(containerColor = viewModel.buttonColour, // Sets the background color for the enabled state
                     disabledContainerColor = Color.Gray // Sets the background color for the disabled state) {
                 ))
                 {
-                    Text("Account", color = Color.Black, fontSize = largeText.sp)
+                    Text("Account", color = viewModel.oTextColour, fontSize = largeText.sp)
                 }
                 Row {
-                    Text("Don't have an account? ", fontSize = smallText.sp)
+                    Text("Don't have an account? ", fontSize = smallText.sp, color = viewModel.oTextHighlightColour)
                     Text("Create one!", fontSize = smallText.sp, textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable{ navController.navigate("") })
+                        modifier = Modifier.clickable{ navController.navigate("") }, color = viewModel.oUnderlineTextColour)
                 }
                 Row {
-                    Text("See the ", fontSize = smallText.sp)
+                    Text("See the ", fontSize = smallText.sp, color = viewModel.oTextHighlightColour)
                     Text("benefits ", fontSize = smallText.sp, textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable{ navController.navigate("")})
-                    Text("of an account", fontSize = smallText.sp)
+                        modifier = Modifier.clickable{ navController.navigate("")}, color = viewModel.oUnderlineTextColour)
+                    Text("of an account", fontSize = smallText.sp, color = viewModel.oTextHighlightColour)
                 }
                 Spacer(modifier = Modifier.width(48.dp))
                 Button(onClick = { navController.navigate("test") },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(255, 205, 0),
+                    colors = ButtonDefaults.buttonColors(containerColor = viewModel.buttonColour,
                         disabledContainerColor = Color.Gray
                     )) {
-                    Text("Guest", color = Color.Black, fontSize = largeText.sp)
+                    Text("Guest", color = viewModel.oTextColour, fontSize = largeText.sp)
                 }
             }
 
@@ -160,7 +160,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewMo
             contentAlignment = Alignment.CenterStart
         ){}
         BottomAppBar(
-            containerColor = viewModel.background) {
+            containerColor = viewModel.mainBackColour) {
             // SCROLLING MENU (underlaps the back button)
             Row(
                 modifier = Modifier
@@ -169,6 +169,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewMo
                     //.align(Alignment.CenterStart)
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                Spacer(modifier = Modifier.width(24.dp))
                 settings()
             }
         }
@@ -182,12 +183,10 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
     val screenReader = viewModel.screenReader
 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Spacer(modifier = Modifier.width(12.dp))
-
         AnimatedVisibility(visible = !languageOption) {
             //Settings button
             Surface(
-                color = Color(255, 205, 0),
+                color = if (optionsVisible) viewModel.buttonBackColour else viewModel.buttonColour,
                 shape = RoundedCornerShape(12.dp)
             ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
             {
@@ -197,7 +196,7 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                     Icon(
                         Icons.Default.Settings,
                         contentDescription = "Settings",
-                        tint = Color(103, 52, 25),
+                        tint = viewModel.iconsColour,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -209,7 +208,7 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
 
                 //Language option
                 Surface(
-                    color = Color(255, 205, 0),
+                    color = viewModel.buttonColour,
                     shape = RoundedCornerShape(12.dp)
                 ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
                 {
@@ -219,7 +218,7 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.globe),
                             contentDescription = "Language",
-                            tint = Color(103, 52, 25)
+                            tint = viewModel.iconsColour
                         )
                     }
                 }
@@ -228,7 +227,7 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         //ScreenReader option
                         Surface(
-                            color = if (screenReader) viewModel.orange else viewModel.yellow,
+                            color = if (screenReader) viewModel.buttonBackColour else viewModel.buttonColour,
                             shape = RoundedCornerShape(12.dp)
                         ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
                         {
@@ -238,14 +237,14 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.lips4),
                                     contentDescription = "Screen Reader",
-                                    tint = if (screenReader) Color.White else viewModel.brown
+                                    tint = viewModel.iconsColour
                                 )
                             }
                         }
 
                         //Increase Size option
                         Surface(
-                            color = Color(255, 205, 0),
+                            color = viewModel.buttonColour,
                             shape = RoundedCornerShape(12.dp)
                         ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
                         {
@@ -255,14 +254,14 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.size_up),
                                     contentDescription = "Settings",
-                                    tint = Color(103, 52, 25)
+                                    tint = viewModel.iconsColour
                                 )
                             }
                         }
 
                         //Decrease Size option
                         Surface(
-                            color = Color(255, 205, 0),
+                            color = viewModel.buttonColour,
                             shape = RoundedCornerShape(12.dp)
                         ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
                         {
@@ -272,7 +271,7 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.size_down),
                                     contentDescription = "Settings",
-                                    tint = Color(103, 52, 25)
+                                    tint = viewModel.iconsColour
                                 )
                             }
                         }
