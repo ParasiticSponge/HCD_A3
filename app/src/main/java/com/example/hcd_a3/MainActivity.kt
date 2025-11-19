@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -170,28 +172,33 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
     val meals = listOf(
         FoodItem("ramen", "egg, ramen noodles", 12),
         FoodItem("pork bowl", "pork, seasoning", 15))
+    val entrees = listOf(
+        FoodItem("cake", "chocolate base, chocolate icing", 10),
+        FoodItem("ice cream", "chocolate", 7))
     val drinks = listOf(
         FoodItem("wine", "grapes", 20),
         FoodItem("Coca-Cola", "", 5))
-    val menu = listOf("Meals", "Dessert", "Drinks")
+    val menu = listOf("Entrees", "Meals", "Desserts", "Drinks")
 
     val dessertCount = remember { mutableStateListOf(*Array(desserts.size) { 0 }) }
-    val mealCount = remember { mutableStateListOf(*Array(desserts.size) { 0 }) }
-    val drinkCount = remember { mutableStateListOf(*Array(desserts.size) { 0 }) }
-    val totalOrderCount = remember { derivedStateOf { dessertCount.sum() + mealCount.sum() + drinkCount.sum() } }
+    val mealCount = remember { mutableStateListOf(*Array(meals.size) { 0 }) }
+    val drinkCount = remember { mutableStateListOf(*Array(drinks.size) { 0 }) }
+    val entreeCount = remember { mutableStateListOf(*Array(entrees.size) { 0 }) }
+    val totalOrderCount = remember { derivedStateOf { dessertCount.sum() + mealCount.sum() + drinkCount.sum() + entreeCount.sum()} }
 
     val selectedCategory = remember { mutableStateOf("Meals") }
     val displayedItems = when (selectedCategory.value) {
-        "Dessert" -> desserts
+        "Desserts" -> desserts
         "Meals" -> meals
+        "Entrees" -> entrees
         else -> drinks
     }
 
     fun getActiveCount(): SnapshotStateList<Int> {
         return when (selectedCategory.value) {
-            "Dessert" -> dessertCount
+            "Desserts" -> dessertCount
             "Meals" -> mealCount
-            "Drinks" -> drinkCount
+            "Entrees" -> entreeCount
             else -> dessertCount // fallback
         }
     }
@@ -212,6 +219,8 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
         targetValue = if (cartExpanded.value) (-screenWidth * 0.8f) else 0.dp
     )
 
+    val optionsVisible = viewModel.optionsVisible
+
     Box(modifier = Modifier
         .offset(x = offsetX)
         .fillMaxSize()) {
@@ -222,7 +231,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                     tonalElevation = 4.dp
                 ) {
                     Column {
-                        // Respect status bar
+                        // Space for phone's status bar
                         Spacer(         //Spacer class puts space between two UI elements. easier compared to padding when inside rows/boxes/columns
                             Modifier.windowInsetsTopHeight(WindowInsets.statusBars)
                         )
@@ -237,17 +246,39 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
 
                             Surface(color = viewModel.topColour, //idk why i coloured this, probably in case i decide to change it later :P
                                 modifier = Modifier
+                                    .align(Alignment.CenterStart)
                                     .zIndex(1f)) // stays above the scroll
                             {
-                                // BACK BUTTON (fixed position)
                                 IconButton(
-                                    onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
+                                    onClick = { /**/ },
                                     modifier = Modifier
-                                        .align(Alignment.CenterStart)
+                                        //.align(Alignment.CenterStart)
                                         .fillMaxHeight()
                                 ) {
                                     Icon(
                                         Icons.AutoMirrored.Default.ArrowBack,
+                                        tint = viewModel.arrowColour,
+                                        contentDescription = "Back",
+
+                                    )
+                                }
+                            }
+
+                            Surface(color = viewModel.topColour, //idk why i coloured this, probably in case i decide to change it later :P
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .zIndex(1f)) // stays above the scroll
+                            {
+                                IconButton(
+                                    onClick = { /**/ },
+                                    modifier = Modifier
+                                        //.align(Alignment.CenterEnd)
+                                        .fillMaxHeight()
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Default.ArrowBack,
+                                        modifier = Modifier.rotate(180f),
+                                        tint = viewModel.arrowColour,
                                         contentDescription = "Back"
                                     )
                                 }
@@ -300,16 +331,106 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                 }
             },
             bottomBar = {
-                // SCROLLING MENU (underlaps the back button)
-                Row(
-                    modifier = Modifier
-                        .background(viewModel.bottomColour)
-                        .fillMaxWidth()
-                        //.align(Alignment.CenterStart)
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    settings()
+                Box(modifier = Modifier
+                    .background(viewModel.bottomColour)
+                    .fillMaxWidth())
+                {
+                    //order button, separated from the row of other icons
+                    AnimatedVisibility(
+                        modifier = Modifier
+                            .align(Alignment.Center),
+                        visible = !optionsVisible) {
+                        Surface(
+                            modifier = Modifier
+                                //.align(Alignment.TopCenter)
+                                .zIndex(1f)
+                                .offset(y = -(30).dp),
+                            color = viewModel.oButtonColour,
+                            shape = RoundedCornerShape(50.dp)
+                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                        {
+                            IconButton(
+                                onClick = { /**/ }, //order
+                                modifier = Modifier.size(100.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Home,
+                                    contentDescription = "Order",
+                                    tint = viewModel.iconsColour,
+                                    modifier = Modifier.size(50.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    //begin at start
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .align(Alignment.Center),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        settings()
+                        AnimatedVisibility(visible = !optionsVisible) {
+                            Row {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                //Home
+                                Surface(
+                                    color = viewModel.buttonColour,
+                                    shape = RoundedCornerShape(12.dp)
+                                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                                {
+                                    IconButton(
+                                        onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Home,
+                                            contentDescription = "Home",
+                                            tint = viewModel.iconsColour,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                }
+
+                                //make space for order button outside of row
+                                Spacer(modifier = Modifier.width(152.dp))
+
+                                Surface(
+                                    color = viewModel.buttonColour,
+                                    shape = RoundedCornerShape(12.dp)
+                                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                                {
+                                    IconButton(
+                                        onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Home,
+                                            contentDescription = "Home",
+                                            tint = viewModel.iconsColour,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    color = viewModel.buttonColour,
+                                    shape = RoundedCornerShape(12.dp)
+                                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                                {
+                                    IconButton(
+                                        onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Home,
+                                            contentDescription = "Home",
+                                            tint = viewModel.iconsColour,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         )

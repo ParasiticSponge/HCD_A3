@@ -98,6 +98,12 @@ class LoginViewModel : ViewModel() {
         "dark" -> Color(102, 96, 96)
         else -> Color.White
     }
+    var arrowColour = when (designScheme.value) {
+        "default" -> Color(255, 217, 90)
+        "light" -> Color(59, 59, 59)
+        "dark" -> Color(255, 255, 255)
+        else -> Color.White
+    }
 //    var logo = when (designScheme.value) {
 //        "default" -> Color.White
 //        "light" -> Color()
