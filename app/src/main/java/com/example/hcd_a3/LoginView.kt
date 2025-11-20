@@ -1,5 +1,6 @@
 package com.example.hcd_a3
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -8,18 +9,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemGestures
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,35 +26,36 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import kotlin.reflect.KMutableProperty
 
 @Composable
-fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewModel()) {
+fun LoginScreen(navController: NavController, backStackEntry: NavBackStackEntry) {
+    val viewModel: LoginViewModel = viewModel()
     val largeText = viewModel.largeText
     val smallText = viewModel.smallText
+
+    LaunchedEffect(backStackEntry) {
+        if (viewModel.optionsVisible) {
+            viewModel.toggleOptions()
+        }
+    }
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -145,7 +142,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewMo
                     Text("of an account", fontSize = smallText.sp, color = viewModel.oTextHighlightColour)
                 }
                 Spacer(modifier = Modifier.width(48.dp))
-                Button(onClick = { navController.navigate("test") },
+                Button(onClick = { navController.navigate("menu") },
                     colors = ButtonDefaults.buttonColors(containerColor = viewModel.buttonColour,
                         disabledContainerColor = Color.Gray
                     )) {
@@ -181,6 +178,9 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
     val languageOption = viewModel.languageOption
     val optionsVisible = viewModel.optionsVisible
     val screenReader = viewModel.screenReader
+
+//    val tag = "Debug"
+//    Log.w(tag, "${viewModel.optionsVisible}")
 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         AnimatedVisibility(visible = !languageOption) {

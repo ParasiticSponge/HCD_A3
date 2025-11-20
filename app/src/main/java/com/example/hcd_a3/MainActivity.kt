@@ -1,8 +1,10 @@
 package com.example.hcd_a3
 
+import android.R
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,6 +40,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,11 +52,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -86,9 +92,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             HCD_A3Theme {
                 val navController = rememberNavController()
+                val orderViewModel: OrderViewModel = viewModel()
+
                 NavHost(navController = navController, startDestination = "Login") {
-                    composable("login") { LoginScreen(navController)}
-                    composable ("menu") { MenuScreen(navController)}
+                    composable("login") { backStackEntry -> LoginScreen(navController, backStackEntry)}
+                    composable ("menu") { backStackEntry -> MenuScreen(navController, backStackEntry,orderViewModel)}
+                    composable ("account") { AccountScreen(navController)}
                     composable ("test") { Tester(navController)}
                 }
             }
@@ -163,53 +172,32 @@ fun ListItem(item: FoodItem) {
 }
 
 @Composable
-fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: List<String>)*/ {
+fun MenuScreen(navController: NavController, backStackEntry: NavBackStackEntry, persistent: OrderViewModel){
     val viewModel: LoginViewModel = viewModel()
 
-    val desserts = listOf(
-        FoodItem("cake", "chocolate base, chocolate icing", 10),
-        FoodItem("ice cream", "chocolate", 7))
-    val meals = listOf(
-        FoodItem("ramen", "egg, ramen noodles", 12),
-        FoodItem("pork bowl", "pork, seasoning", 15))
-    val entrees = listOf(
-        FoodItem("cake", "chocolate base, chocolate icing", 10),
-        FoodItem("ice cream", "chocolate", 7))
-    val drinks = listOf(
-        FoodItem("wine", "grapes", 20),
-        FoodItem("Coca-Cola", "", 5))
-    val menu = listOf("Entrees", "Meals", "Desserts", "Drinks")
-
-    val dessertCount = remember { mutableStateListOf(*Array(desserts.size) { 0 }) }
-    val mealCount = remember { mutableStateListOf(*Array(meals.size) { 0 }) }
-    val drinkCount = remember { mutableStateListOf(*Array(drinks.size) { 0 }) }
-    val entreeCount = remember { mutableStateListOf(*Array(entrees.size) { 0 }) }
-    val totalOrderCount = remember { derivedStateOf { dessertCount.sum() + mealCount.sum() + drinkCount.sum() + entreeCount.sum()} }
-
-    val selectedCategory = remember { mutableStateOf("Meals") }
-    val displayedItems = when (selectedCategory.value) {
-        "Desserts" -> desserts
-        "Meals" -> meals
-        "Entrees" -> entrees
-        else -> drinks
+    val displayedItems = when (persistent.selectedCategory) {
+        "Desserts" -> persistent.desserts
+        "Meals" -> persistent.meals
+        "Entrees" -> persistent.entrees
+        else -> persistent.drinks
     }
 
-    fun getActiveCount(): SnapshotStateList<Int> {
-        return when (selectedCategory.value) {
-            "Desserts" -> dessertCount
-            "Meals" -> mealCount
-            "Entrees" -> entreeCount
-            else -> dessertCount // fallback
-        }
+    val tag = "Debug"
+    Log.w(tag, persistent.selectedCategory)
+
+    val itemList = when (persistent.selectedCategory) {
+        "Desserts" -> persistent.dessertCount
+        "Meals" -> persistent.mealCount
+        "Entrees" -> persistent.entreeCount
+        else -> persistent.dessertCount // fallback
     }
-    val activeCount = getActiveCount()
+    Log.w(tag, "$itemList")
+    Log.w(tag, "${persistent.entreeCount}")
 
     val configuration: Configuration = Resources.getSystem().configuration
     val screenWidth = configuration.screenWidthDp.dp
-
-    val cartVisible = totalOrderCount.value > 0
+    val cartVisible = persistent.totalOrderCount.value > 0
     val cartExpanded = remember { mutableStateOf(false) }
-
     //change the amount of inset the order items have to shift by to display the cart icon when adding items
     var inset = 0.dp
     val rightInset by animateDpAsState(
@@ -220,6 +208,12 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
     )
 
     val optionsVisible = viewModel.optionsVisible
+    val accountVisible = viewModel.accountVisible
+
+    //optional: get rid of order button when account is clicked
+//    LaunchedEffect(backStackEntry) {
+//        if (viewModel.accountVisible) viewModel.toggleAccount()
+//    }
 
     Box(modifier = Modifier
         .offset(x = offsetX)
@@ -294,8 +288,8 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 Spacer(modifier = Modifier.width(48.dp)) // space behind back icon
-                                menu.forEach { item ->
-                                    val isSelected = item == selectedCategory.value
+                                persistent.menu.forEach { item ->
+                                    val isSelected = item == persistent.selectedCategory
                                     val backgroundColour =
                                         if (isSelected) viewModel.buttonBackColour else viewModel.buttonColour
                                     val animatedColor by animateColorAsState(targetValue = backgroundColour)
@@ -310,7 +304,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                                 shape = RoundedCornerShape(8.dp)
                                             )
                                             .clickable {
-                                                selectedCategory.value = item
+                                                persistent.setCategory(item)
                                             },
                                         //.padding(horizontal = 12.dp, vertical = 8.dp),
                                         contentAlignment = Alignment.Center
@@ -331,107 +325,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                 }
             },
             bottomBar = {
-                Box(modifier = Modifier
-                    .background(viewModel.bottomColour)
-                    .fillMaxWidth())
-                {
-                    //order button, separated from the row of other icons
-                    AnimatedVisibility(
-                        modifier = Modifier
-                            .align(Alignment.Center),
-                        visible = !optionsVisible) {
-                        Surface(
-                            modifier = Modifier
-                                //.align(Alignment.TopCenter)
-                                .zIndex(1f)
-                                .offset(y = -(30).dp),
-                            color = viewModel.oButtonColour,
-                            shape = RoundedCornerShape(50.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { /**/ }, //order
-                                modifier = Modifier.size(100.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Home,
-                                    contentDescription = "Order",
-                                    tint = viewModel.iconsColour,
-                                    modifier = Modifier.size(50.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    //begin at start
-                    Row(
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .align(Alignment.Center),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        settings()
-                        AnimatedVisibility(visible = !optionsVisible) {
-                            Row {
-                                Spacer(modifier = Modifier.width(6.dp))
-                                //Home
-                                Surface(
-                                    color = viewModel.buttonColour,
-                                    shape = RoundedCornerShape(12.dp)
-                                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                                {
-                                    IconButton(
-                                        onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Home,
-                                            contentDescription = "Home",
-                                            tint = viewModel.iconsColour,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                    }
-                                }
-
-                                //make space for order button outside of row
-                                Spacer(modifier = Modifier.width(152.dp))
-
-                                Surface(
-                                    color = viewModel.buttonColour,
-                                    shape = RoundedCornerShape(12.dp)
-                                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                                {
-                                    IconButton(
-                                        onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Home,
-                                            contentDescription = "Home",
-                                            tint = viewModel.iconsColour,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    color = viewModel.buttonColour,
-                                    shape = RoundedCornerShape(12.dp)
-                                ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                                {
-                                    IconButton(
-                                        onClick = { navController.popBackStack() }, // navigate to home screen by going back in the stack
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Home,
-                                            contentDescription = "Home",
-                                            tint = viewModel.iconsColour,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                bottomBar(navController, viewModel, optionsVisible, accountVisible)
             }
         )
         { innerPadding ->
@@ -469,7 +363,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                         .fillMaxHeight(), // Fixed height for each box
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(activeCount[index].toString(), fontSize = viewModel.largeText.sp, color = viewModel.oTextColour)
+                                    Text(itemList[index].toString(), fontSize = viewModel.largeText.sp, color = viewModel.oTextColour)
                                 }
                                 //DESCRIPTION and PRICE for item
                                 Box(
@@ -487,11 +381,11 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                     modifier = Modifier
                                         .weight(1f) // Distribute available width equally among boxes
                                         .fillMaxHeight() // Fixed height for each box
-                                        .clickable(onClick = { activeCount[index]++ }),
+                                        .clickable(onClick = { itemList[index]++ }),
                                     contentAlignment = Alignment.Center
                                 ) {
 //                                    IconButton(
-//                                        onClick = { activeCount[index]++ }
+//                                        onClick = { }
 //                                    ) {
                                         Icon(Icons.Default.Add, contentDescription = "Add")
 //                                    }
@@ -501,7 +395,7 @@ fun MenuScreen(navController: NavController)/*desserts: List<FoodItem>, menu: Li
                                     modifier = Modifier
                                         .weight(1f) // Distribute available width equally among boxes
                                         .fillMaxHeight() // Fixed height for each box
-                                        .clickable(onClick = { if (activeCount[index] > 0) activeCount[index]-- }),
+                                        .clickable(onClick = { if (itemList[index] > 0) itemList[index]-- }),
                                     contentAlignment = Alignment.Center
                                 ) {
 //                                    IconButton(
@@ -666,4 +560,108 @@ fun CartContent(onClose: () -> Unit) {
     }
 }
 
+@Composable
+fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVisible: Boolean, accountVisible: Boolean) {
+    Box(modifier = Modifier
+        .background(viewModel.bottomColour)
+        .fillMaxWidth())
+    {
+        //order button, separated from the row of other icons
+        AnimatedVisibility(
+            modifier = Modifier
+                .align(Alignment.Center),
+            visible = !optionsVisible && !accountVisible) {
+            Surface(
+                modifier = Modifier
+                    //.align(Alignment.TopCenter)
+                    .zIndex(1f)
+                    .offset(y = -(30).dp),
+                color = viewModel.oButtonColour,
+                shape = RoundedCornerShape(50.dp)
+            ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+            {
+                IconButton(
+                    onClick = { /**/ }, //order
+                    modifier = Modifier.size(100.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Order",
+                        tint = viewModel.iconsColour,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }
+            }
+        }
+
+        //begin at start
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .align(Alignment.Center),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            settings()
+            AnimatedVisibility(visible = !optionsVisible) {
+                Row {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    //Home
+                    Surface(
+                        color = viewModel.buttonColour,
+                        shape = RoundedCornerShape(12.dp)
+                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                    {
+                        IconButton(
+                            onClick = { navController.popBackStack() } // navigate to home screen by going back in the stack
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Home,
+                                contentDescription = "Home",
+                                tint = viewModel.iconsColour,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+
+                    //make space for order button outside of row
+                    Spacer(modifier = Modifier.width(152.dp))
+
+                    Surface(
+                        color = viewModel.buttonColour,
+                        shape = RoundedCornerShape(12.dp)
+                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                    {
+                        IconButton(
+                            onClick = { navController.navigate("menu") }
+                        ) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = com.example.hcd_a3.R.drawable.menu),
+                                contentDescription = "Menu",
+                                tint = viewModel.iconsColour,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = viewModel.buttonColour,
+                        shape = RoundedCornerShape(12.dp)
+                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                    {
+                        IconButton(
+                            onClick = { navController.navigate("account") }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Account",
+                                tint = viewModel.iconsColour,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 

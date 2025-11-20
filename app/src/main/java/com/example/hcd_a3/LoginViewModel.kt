@@ -119,11 +119,12 @@ class LoginViewModel : ViewModel() {
         private set
     var languageSelected by mutableStateOf("English")
         private set
+    var accountVisible by mutableStateOf(false)
+        private set
     var largeText by mutableStateOf(16)
         private set
     var smallText by mutableStateOf(12)
         private set
-
     fun toggleOptions() {
         optionsVisible = !optionsVisible
     }
@@ -140,5 +141,8 @@ class LoginViewModel : ViewModel() {
     fun decreaseTextSize() {
         largeText -= 1
         smallText -= 1
+    }
+    fun toggleAccount() {
+        accountVisible = !accountVisible
     }
 }
