@@ -1,6 +1,5 @@
 package com.example.hcd_a3
 
-import android.R
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
@@ -38,7 +37,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -52,17 +50,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -73,7 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavBackStackEntry
+//import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -96,43 +88,43 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController = navController, startDestination = "Login") {
                     composable("login") { backStackEntry -> LoginScreen(navController, backStackEntry)}
-                    composable ("menu") { backStackEntry -> MenuScreen(navController, backStackEntry,orderViewModel)}
+                    composable ("menu") { MenuScreen(navController,orderViewModel)}
                     composable ("account") { AccountScreen(navController)}
-                    composable ("test") { Tester(navController)}
+                    //composable ("test") { Tester(navController)}
                 }
             }
         }
     }
 }
 
-@Composable
-fun Tester(navController: NavController) {
-    Column {
-        // Surface with default (0dp) tonal elevation
-        Surface(
-            modifier = Modifier,
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Text("Background Surface")
-        }
-
-        // Surface with 3dp tonal elevation (e.g., a Navigation Bar)
-        Surface(
-            modifier = Modifier,
-            tonalElevation = 3.dp
-        ) {
-            Text("Elevated Surface (e.g., Navigation Bar)")
-        }
-
-        // Surface with higher tonal elevation (e.g., a Card)
-        Surface(
-            modifier = Modifier,
-            tonalElevation = 8.dp
-        ) {
-            Text("Even More Elevated Surface (e.g., Card)")
-        }
-    }
-}
+//@Composable
+//fun Tester(navController: NavController) {
+//    Column {
+//        // Surface with default (0dp) tonal elevation
+//        Surface(
+//            modifier = Modifier,
+//            color = MaterialTheme.colorScheme.background
+//        ) {
+//            Text("Background Surface")
+//        }
+//
+//        // Surface with 3dp tonal elevation (e.g., a Navigation Bar)
+//        Surface(
+//            modifier = Modifier,
+//            tonalElevation = 3.dp
+//        ) {
+//            Text("Elevated Surface (e.g., Navigation Bar)")
+//        }
+//
+//        // Surface with higher tonal elevation (e.g., a Card)
+//        Surface(
+//            modifier = Modifier,
+//            tonalElevation = 8.dp
+//        ) {
+//            Text("Even More Elevated Surface (e.g., Card)")
+//        }
+//    }
+//}
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
@@ -172,7 +164,7 @@ fun ListItem(item: FoodItem) {
 }
 
 @Composable
-fun MenuScreen(navController: NavController, backStackEntry: NavBackStackEntry, persistent: OrderViewModel){
+fun MenuScreen(navController: NavController, persistent: OrderViewModel){ //backStackEntry: NavBackStackEntry
     val viewModel: LoginViewModel = viewModel()
 
     val displayedItems = when (persistent.selectedCategory) {
@@ -183,13 +175,25 @@ fun MenuScreen(navController: NavController, backStackEntry: NavBackStackEntry, 
     }
 
     val tag = "Debug"
-    Log.w(tag, persistent.selectedCategory)
+//    Log.w(tag, persistent.selectedCategory)
+//
+//    val aaa = listOf(
+//        FoodItem("cake", "chocolate base, chocolate icing", 10),
+//        FoodItem("ice cream", "chocolate", 7))
+
+//    val arrFinal = List(aaa.size, {0}).toMutableList()
+//    for (i in 0 until arrFinal.size) {
+//        arrFinal[i] = aaa[i].price
+//    }
+
+//    val arrFinal = List(7, {0})
+//    arrFinal.forEach { item ->  Log.w(tag, item.toString())}
 
     val itemList = when (persistent.selectedCategory) {
         "Desserts" -> persistent.dessertCount
         "Meals" -> persistent.mealCount
         "Entrees" -> persistent.entreeCount
-        else -> persistent.dessertCount // fallback
+        else -> persistent.drinkCount // fallback
     }
     Log.w(tag, "$itemList")
     Log.w(tag, "${persistent.entreeCount}")
@@ -199,7 +203,7 @@ fun MenuScreen(navController: NavController, backStackEntry: NavBackStackEntry, 
     val cartVisible = persistent.totalOrderCount.value > 0
     val cartExpanded = remember { mutableStateOf(false) }
     //change the amount of inset the order items have to shift by to display the cart icon when adding items
-    var inset = 0.dp
+    val inset = 0.dp
     val rightInset by animateDpAsState(
         targetValue = if (cartVisible) inset else 0.dp
     )
@@ -325,7 +329,7 @@ fun MenuScreen(navController: NavController, backStackEntry: NavBackStackEntry, 
                 }
             },
             bottomBar = {
-                bottomBar(navController, viewModel, optionsVisible, accountVisible)
+                bottomBar(navController, viewModel, optionsVisible, accountVisible, persistent)
             }
         )
         { innerPadding ->
@@ -403,7 +407,7 @@ fun MenuScreen(navController: NavController, backStackEntry: NavBackStackEntry, 
 //                                            if (activeCount[index] > 0) activeCount[index]--
 //                                        }
 //                                    ) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Remove")
+                                        Icon(ImageVector.vectorResource(id = R.drawable.subtract), contentDescription = "Remove", modifier = Modifier.size(24.dp))
 //                                    }
                                 }
                             }
@@ -508,39 +512,39 @@ fun MenuScreen(navController: NavController, backStackEntry: NavBackStackEntry, 
     }
 }
 
-@Composable
-fun CartButton(count: Int, onClick: () -> Unit) {
-    val viewModel: LoginViewModel = viewModel()
-//    Box(
+//@Composable
+//fun CartButton(count: Int, onClick: () -> Unit) {
+//    val viewModel: LoginViewModel = viewModel()
+////    Box(
+////        modifier = Modifier
+////            .padding(4.dp)
+////            .clickable { onClick() }
+////            .background(Color.White, RoundedCornerShape(8.dp))
+////    ) {
+////        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+////            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
+////            if (count > 0) {
+////                Text(count.toString(), color = Color.Red, fontSize = viewModel.largeText.sp)
+////            }
+////        }
+////    }
+//    Surface(
 //        modifier = Modifier
-//            .padding(4.dp)
-//            .clickable { onClick() }
-//            .background(Color.White, RoundedCornerShape(8.dp))
+//            .clickable { onClick() },
+//            //.background(Color.White, RoundedCornerShape(8.dp))
+//        shape = RoundedCornerShape(8.dp),
+//        color = Color.White
 //    ) {
-//        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Column(
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            modifier = Modifier.padding(12.dp)) {
 //            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
 //            if (count > 0) {
 //                Text(count.toString(), color = Color.Red, fontSize = viewModel.largeText.sp)
 //            }
 //        }
 //    }
-    Surface(
-        modifier = Modifier
-            .clickable { onClick() },
-            //.background(Color.White, RoundedCornerShape(8.dp))
-        shape = RoundedCornerShape(8.dp),
-        color = Color.White
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(12.dp)) {
-            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
-            if (count > 0) {
-                Text(count.toString(), color = Color.Red, fontSize = viewModel.largeText.sp)
-            }
-        }
-    }
-}
+//}
 
 @Composable
 fun CartContent(onClose: () -> Unit) {
@@ -561,7 +565,7 @@ fun CartContent(onClose: () -> Unit) {
 }
 
 @Composable
-fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVisible: Boolean, accountVisible: Boolean) {
+fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVisible: Boolean, accountVisible: Boolean, persistent: OrderViewModel) {
     Box(modifier = Modifier
         .background(viewModel.bottomColour)
         .fillMaxWidth())
@@ -569,7 +573,7 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
         //order button, separated from the row of other icons
         AnimatedVisibility(
             modifier = Modifier
-                .align(Alignment.Center),
+                .align(Alignment.Center),   //place the button in the middle
             visible = !optionsVisible && !accountVisible) {
             Surface(
                 modifier = Modifier
@@ -584,12 +588,31 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                     onClick = { /**/ }, //order
                     modifier = Modifier.size(100.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = "Order",
-                        tint = viewModel.iconsColour,
-                        modifier = Modifier.size(50.dp)
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center) {
+                        Text(
+                            text = persistent.totalOrderCount.value.toString(),
+                            fontSize = viewModel.largeText.sp,
+                            color = viewModel.oTextHighlightColour,
+                            modifier = Modifier.zIndex(1f)
+                                .offset(y = (-20).dp),
+                        )
+                        Column(modifier = Modifier.align(Alignment.Center)) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "Order",
+                                tint = viewModel.iconsColour,
+                                modifier = Modifier.size(50.dp)
+                            )
+                            Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                                Text(
+                                    text = "$${persistent.totalAmountCount.value}",
+                                    fontSize = viewModel.largeText.sp,
+                                    color = viewModel.oTextHighlightColour
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -612,7 +635,7 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                     ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
                     {
                         IconButton(
-                            onClick = { navController.popBackStack() } // navigate to home screen by going back in the stack
+                            onClick = { navController.navigate("login") } // navigate to home
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Home,
@@ -635,7 +658,7 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                             onClick = { navController.navigate("menu") }
                         ) {
                             Icon(
-                                imageVector = ImageVector.vectorResource(id = com.example.hcd_a3.R.drawable.menu),
+                                imageVector = ImageVector.vectorResource(id = R.drawable.menu),
                                 contentDescription = "Menu",
                                 tint = viewModel.iconsColour,
                                 modifier = Modifier.size(48.dp)

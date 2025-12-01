@@ -117,7 +117,11 @@ class LoginViewModel : ViewModel() {
         private set
     var languageOption by mutableStateOf(false)
         private set
+    var themeOption by mutableStateOf(false)
+        private set
     var languageSelected by mutableStateOf("English")
+        private set
+    var themeSeleted by mutableStateOf("Default")
         private set
     var accountVisible by mutableStateOf(false)
         private set
@@ -133,6 +137,9 @@ class LoginViewModel : ViewModel() {
     }
     fun toggleLanguage() {
         languageOption = !languageOption
+    }
+    fun toggleTheme() {
+        themeOption = !themeOption
     }
     fun increaseTextSize() {
         largeText += 1
