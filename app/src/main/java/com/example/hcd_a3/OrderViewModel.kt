@@ -21,7 +21,7 @@ class OrderViewModel : ViewModel() {
     val drinks = listOf(
         FoodItem("wine", "grapes", 20),
         FoodItem("Coca-Cola", "", 5))
-    val menu = listOf("Entrees", "Meals", "Desserts", "Drinks")
+    val menu = listOf("Entrees", "Meals", "Desserts", "Drinks", "Recommended")
 
     private val _dessertCount = mutableStateListOf(*Array(desserts.size) { 0 })
     val dessertCount: SnapshotStateList<Int> get() = _dessertCount
@@ -42,6 +42,9 @@ class OrderViewModel : ViewModel() {
     }
 
     fun multiplyArray(arr1: List<Int>, arr2: List<Int>): List<Int> {
+        // one‑liner to extract all prices
+        //val prices = desserts.map { it.price }
+
         val arrFinal = List(arr1.size) {0}.toMutableList()
         if (arr1.size != arr2.size) return arrFinal
 

@@ -1,7 +1,12 @@
 package com.example.hcd_a3
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -10,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -19,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -32,8 +39,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -43,9 +56,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavController, backStackEntry: NavBackStackEntry) {
@@ -158,29 +173,93 @@ fun LoginScreen(navController: NavController, backStackEntry: NavBackStackEntry)
             .weight(1f),
             contentAlignment = Alignment.CenterStart
         ){}
+
+        val scrollState = rememberScrollState()
+        val scope = rememberCoroutineScope()
+        var scrollOffset by remember { mutableStateOf(0f) }
         BottomAppBar(
             containerColor = viewModel.mainBackColour) {
-            // SCROLLING MENU (underlaps the back button)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.zIndex(1f).matchParentSize()) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = scrollState.value > 0,
+                        enter = fadeIn() + slideInHorizontally(),
+                        exit = fadeOut() + slideOutHorizontally(),
+                    ) {
+                        Surface(
+                            color = viewModel.secondBackColour,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    scrollOffset -= 150f; scrollState.animateScrollTo(
+                                    scrollOffset.toInt().coerceAtLeast(0)
+                                )
+                                }
+                            }, modifier = Modifier.fillMaxHeight()) {
+                                Icon(
+                                    Icons.AutoMirrored.Default.ArrowBack,
+                                    tint = viewModel.iconsColour,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // SCROLLING MENU (underlaps the other buttons)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState),
                     //.align(Alignment.CenterStart)
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Spacer(modifier = Modifier.width(24.dp))
-                settings()
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Spacer(modifier = Modifier.width(24.dp))
+                    settings(changeColour = true, scrollState = scrollState)
+                }
+
+                Box(modifier = Modifier.zIndex(1f).matchParentSize()) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = scrollState.value <= scrollState.maxValue - 10 && (viewModel.themeOption || viewModel.languageOption),
+                        enter = fadeIn() + slideInHorizontally(),
+                        exit = fadeOut() + slideOutHorizontally(),
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Surface(
+                            color = viewModel.secondBackColour,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    scrollOffset += 150f; scrollState.animateScrollTo(
+                                    scrollOffset.toInt().coerceAtLeast(0)
+                                )
+                                }
+                            }, modifier = Modifier.fillMaxHeight()) {
+                                Icon(
+                                    Icons.AutoMirrored.Default.ArrowBack,
+                                    tint = viewModel.iconsColour,
+                                    contentDescription = "Back",
+                                    modifier = Modifier.rotate(180f)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun settings(viewModel: LoginViewModel = viewModel()) {
+fun settings(viewModel: LoginViewModel = viewModel(), changeColour: Boolean, scrollState: ScrollState) {
     val languageOption = viewModel.languageOption
     val themeOption = viewModel.themeOption
     val optionsVisible = viewModel.optionsVisible
     val screenReader = viewModel.screenReader
+    val textColour = if (changeColour) viewModel.oTextHighlightColour else viewModel.oTextColour
 
 //    val tag = "Debug"
 //    Log.w(tag, "${viewModel.optionsVisible}")
@@ -210,94 +289,109 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
                 AnimatedVisibility(visible = !themeOption) {
-                    //Language option
-                    Surface(
-                        color = viewModel.buttonColour,
-                        shape = RoundedCornerShape(12.dp)
-                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                    {
-                        IconButton(
-                            onClick = { viewModel.toggleLanguage() }
-                        ) {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.globe),
-                                contentDescription = "Language",
-                                tint = viewModel.iconsColour
-                            )
+                    Column {
+                        //Language option
+                        Surface(
+                            color = if (languageOption) viewModel.buttonBackColour else viewModel.buttonColour,
+                            shape = RoundedCornerShape(12.dp)
+                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                        {
+                            IconButton(
+                                onClick = { viewModel.toggleLanguage() }
+                            ) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.globe),
+                                    contentDescription = "Language",
+                                    tint = viewModel.iconsColour
+                                )
+                            }
                         }
+                        Text("Language", fontSize = viewModel.smallText.sp, color = textColour)
                     }
                 }
 
                 AnimatedVisibility(visible = !languageOption) {
-                    //Theme option
-                    Surface(
-                        color = viewModel.buttonColour,
-                        shape = RoundedCornerShape(12.dp)
-                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                    {
-                        IconButton(
-                            onClick = { viewModel.toggleTheme() }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Build,
-                                contentDescription = "Language",
-                                tint = viewModel.iconsColour
-                            )
+                    Column {
+                        //Theme option
+                        Surface(
+                            color = if (themeOption) viewModel.buttonBackColour else viewModel.buttonColour,
+                            shape = RoundedCornerShape(12.dp)
+                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                        {
+                            IconButton(
+                                onClick = { viewModel.toggleTheme() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Build,
+                                    contentDescription = "Language",
+                                    tint = viewModel.iconsColour
+                                )
+                            }
                         }
+                        Text("Theme", fontSize = viewModel.smallText.sp, color = textColour)
                     }
                 }
 
                 AnimatedVisibility(visible = !languageOption && !themeOption) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         //ScreenReader option
-                        Surface(
-                            color = if (screenReader) viewModel.buttonBackColour else viewModel.buttonColour,
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { viewModel.toggleReader() }
-                            ) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.lips4),
-                                    contentDescription = "Screen Reader",
-                                    tint = viewModel.iconsColour
-                                )
+                        Column {
+                            Surface(
+                                color = if (screenReader) viewModel.buttonBackColour else viewModel.buttonColour,
+                                shape = RoundedCornerShape(12.dp)
+                            ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                            {
+                                IconButton(
+                                    onClick = { viewModel.toggleReader() }
+                                ) {
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.lips4),
+                                        contentDescription = "Screen Reader",
+                                        tint = viewModel.iconsColour
+                                    )
+                                }
                             }
+                            Text("Reader", fontSize = viewModel.smallText.sp, color = textColour)
                         }
 
                         //Increase Size option
-                        Surface(
-                            color = viewModel.buttonColour,
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { if (viewModel.largeText < 24) viewModel.increaseTextSize() }
-                            ) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.size_up),
-                                    contentDescription = "Settings",
-                                    tint = viewModel.iconsColour
-                                )
+                        Column {
+                            Surface(
+                                color = viewModel.buttonColour,
+                                shape = RoundedCornerShape(12.dp)
+                            ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                            {
+                                IconButton(
+                                    onClick = { if (viewModel.largeText < 24) viewModel.increaseTextSize() }
+                                ) {
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.size_up),
+                                        contentDescription = "Settings",
+                                        tint = viewModel.iconsColour
+                                    )
+                                }
                             }
+                            Text("Size Up", fontSize = viewModel.smallText.sp, color = textColour)
                         }
 
                         //Decrease Size option
-                        Surface(
-                            color = viewModel.buttonColour,
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { if (viewModel.largeText > 16) viewModel.decreaseTextSize() }
-                            ) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.size_down),
-                                    contentDescription = "Settings",
-                                    tint = viewModel.iconsColour
-                                )
+                        Column {
+                            Surface(
+                                color = viewModel.buttonColour,
+                                shape = RoundedCornerShape(12.dp)
+                            ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                            {
+                                IconButton(
+                                    onClick = { if (viewModel.largeText > 16) viewModel.decreaseTextSize() }
+                                ) {
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.size_down),
+                                        contentDescription = "Settings",
+                                        tint = viewModel.iconsColour
+                                    )
+                                }
                             }
+                            Text("Size Down", fontSize = viewModel.smallText.sp, color = textColour)
                         }
                     }
                 }
@@ -308,83 +402,106 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                 AnimatedVisibility(visible = themeOption) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         //Default
-                        Surface(
-                            color = if (screenReader) viewModel.buttonBackColour else viewModel.buttonColour,
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { /**/ }
+                        Column {
+                            Surface(
+                                color = if (screenReader) viewModel.buttonBackColour else viewModel.buttonColour,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.size(47.5.dp) // or whatever size you want
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.theme_default),
-                                    contentDescription = "Default Theme",
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                                Text(text= "Tt", color = Color.Black, fontSize = viewModel.largeText.sp)
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.theme_default),
+                                        contentDescription = "Default Theme",
+                                        contentScale = ContentScale.Crop, // ensures the image fills the shape
+                                        modifier = Modifier.matchParentSize()
+                                    )
+                                    Text(
+                                        text = "Tt",
+                                        color = Color.Black,
+                                        fontSize = viewModel.largeText.sp,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
                             }
+                            Text("Default", fontSize = viewModel.smallText.sp, color = textColour)
                         }
 
                         //Light
-                        Surface(
-                            color = Color.White,
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { /**/ }
-                            ) {
-                                Text("Tt", color = Color.Black)
+                        Column {
+                            Surface(
+                                color = Color.White,
+                                shape = RoundedCornerShape(12.dp)
+                            ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                            {
+                                IconButton(
+                                    onClick = { /**/ }
+                                ) {
+                                    Text("Tt", color = Color.Black)
+                                }
                             }
+                            Text("Light", fontSize = viewModel.smallText.sp, color = textColour)
                         }
 
                         //Dark
-                        Surface(
-                            color = Color(43, 43, 43),
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { /**/ }
-                            ) {
-                                Text("Tt", color = Color.White)
+                        Column {
+                            Surface(
+                                color = Color(43, 43, 43),
+                                shape = RoundedCornerShape(12.dp)
+                            ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                            {
+                                IconButton(
+                                    onClick = { /**/ }
+                                ) {
+                                    Text("Tt", color = Color.White)
+                                }
                             }
+                            Text("Dark", fontSize = viewModel.smallText.sp, color = textColour)
                         }
 
                         //Inverted
-                        Surface(
-                            color = if (screenReader) viewModel.buttonBackColour else viewModel.buttonColour,
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { /**/ }
+                        Column {
+                            Surface(
+                                color = if (screenReader) viewModel.buttonBackColour else viewModel.buttonColour,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.size(47.5.dp) // or whatever size you want
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.theme_inverted),
-                                    contentDescription = "Default Theme",
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                                Text("Tt", color = Color.White)
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.theme_inverted),
+                                        contentDescription = "Inverted Theme",
+                                        contentScale = ContentScale.Crop, // ensures the image fills the shape
+                                        modifier = Modifier.matchParentSize()
+                                    )
+                                    Text(
+                                        text = "Tt",
+                                        color = Color.White,
+                                        fontSize = viewModel.largeText.sp,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
                             }
+                            Text("Inverted", fontSize = viewModel.smallText.sp, color = textColour)
                         }
 
                         //Increase Contrast option
-                        Surface(
-                            color = viewModel.buttonColour,
-                            shape = RoundedCornerShape(12.dp)
-                        ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                        {
-                            IconButton(
-                                onClick = { /**/ }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowUp,
-                                    contentDescription = "Settings",
-                                    tint = viewModel.iconsColour,
-                                    modifier = Modifier.size(48.dp)
-                                )
+                        Column {
+                            Surface(
+                                color = viewModel.buttonColour,
+                                shape = RoundedCornerShape(12.dp)
+                            ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+                            {
+                                IconButton(
+                                    onClick = { /**/ }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowUp,
+                                        contentDescription = "Settings",
+                                        tint = viewModel.iconsColour,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                }
                             }
+                            Text("Contrast", fontSize = viewModel.smallText.sp, color = textColour)
                         }
 
                         //Decrease Contrast option
@@ -397,10 +514,10 @@ fun settings(viewModel: LoginViewModel = viewModel()) {
                                 onClick = { /**/ }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    imageVector = Icons.Default.KeyboardArrowUp,
                                     contentDescription = "Settings",
                                     tint = viewModel.iconsColour,
-                                    modifier = Modifier.size(48.dp)
+                                    modifier = Modifier.size(48.dp).rotate(180f)
                                 )
                             }
                         }

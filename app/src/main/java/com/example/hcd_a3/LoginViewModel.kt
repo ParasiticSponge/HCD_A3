@@ -33,9 +33,15 @@ class LoginViewModel : ViewModel() {
         else -> Color.White
     }
     var scrollColour = when (designScheme.value) {
-        "default" -> Color(59, 59, 59)
-        "light" -> Color(102, 96, 96)
+        "default" -> Color(93, 109, 91)
+        "light" -> Color(178, 186, 141)
         "dark" -> Color(102, 96, 96)
+        else -> Color.White
+    }
+    var scrollButtonColour = when (designScheme.value) {
+        "default" -> Color(255, 217, 90)
+        "light" -> Color(255, 217, 90)
+        "dark" -> Color(43, 43, 43)
         else -> Color.White
     }
     var buttonColour = when (designScheme.value) {
