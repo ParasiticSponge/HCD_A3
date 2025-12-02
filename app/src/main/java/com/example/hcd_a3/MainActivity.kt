@@ -91,11 +91,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             HCD_A3Theme {
                 val navController = rememberNavController()
-                val orderViewModel: OrderViewModel = viewModel()
+                val orderViewModel: OrderViewModel = viewModel(navController)
+                val viewModel: LoginViewModel = viewModel(navController)
+
 
                 NavHost(navController = navController, startDestination = "Login") {
-                    composable("login") { backStackEntry -> LoginScreen(navController, backStackEntry)}
-                    composable ("menu") { MenuScreen(navController,orderViewModel)}
+                    composable("login") { backStackEntry -> LoginScreen(navController, backStackEntry, viewModel)}
+                    composable ("menu") { MenuScreen(navController,orderViewModel, viewModel)}
                     composable ("account") { AccountScreen(navController)}
                     //composable ("test") { Tester(navController)}
                 }
@@ -171,7 +173,7 @@ fun ListItem(item: FoodItem) {
 }
 
 @Composable
-fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //backStackEntry: NavBackStackEntry
+fun MenuScreen(navController: NavController, persistent: OrderViewModel, viewModel: LoginViewModel) { //backStackEntry: NavBackStackEntry
     //    Log.w(tag, persistent.selectedCategory)
 //
 //    val aaa = listOf(
@@ -216,7 +218,9 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
     val rightInset by animateDpAsState(targetValue = if (cartVisible) inset else 0.dp)
     val offsetX by animateDpAsState(targetValue = if (cartExpanded.value) (-screenWidth * 0.8f) else 0.dp)
 
-    Box(modifier = Modifier.offset(x = offsetX).fillMaxSize()) {
+    Box(modifier = Modifier
+        .offset(x = offsetX)
+        .fillMaxSize()) {
         Scaffold(modifier = Modifier.fillMaxSize(),
             topBar = {
                 Surface(tonalElevation = 4.dp) {
@@ -238,7 +242,9 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
                         //.height: //make to 36 as base
 
                         Box(
-                            Modifier.fillMaxWidth().height((32 + viewModel.largeText).dp)
+                            Modifier
+                                .fillMaxWidth()
+                                .height((32 + viewModel.largeText).dp)
                                 .background(color = viewModel.topColour)
                         ) {
                             //alternatively use this@Column.Animated...
@@ -250,13 +256,22 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
                                 }
                             }
 
-                            Surface(color = viewModel.topColour, modifier = Modifier.align(Alignment.CenterEnd).zIndex(1f)) {
+                            Surface(color = viewModel.topColour, modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .zIndex(1f)) {
                                 IconButton(onClick = { scope.launch { scrollOffset += 150f; scrollState.animateScrollTo(scrollOffset.toInt()) } }, modifier = Modifier.fillMaxHeight()) {
                                     Icon(Icons.AutoMirrored.Default.ArrowBack, modifier = Modifier.rotate(180f), tint = viewModel.arrowColour, contentDescription = "Back")
                                 }
                             }
 
-                            Row(modifier = Modifier.fillMaxWidth().horizontalScroll(scrollState).align(Alignment.CenterStart).padding(start = 0.dp, end = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(scrollState)
+                                    .align(Alignment.CenterStart)
+                                    .padding(start = 0.dp, end = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Spacer(modifier = Modifier.width(width))
 
                                 persistent.menu.forEach {
@@ -266,7 +281,13 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
                                         if (isSelected) viewModel.buttonBackColour else viewModel.buttonColour
                                     val animatedColor by animateColorAsState(targetValue = backgroundColour)
 
-                                    Box(modifier = Modifier.height((20 + viewModel.largeText).dp).background(color = animatedColor, shape = RoundedCornerShape(8.dp)).clickable { persistent.setCategory(item) }, contentAlignment = Alignment.Center) {
+                                    Box(modifier = Modifier
+                                        .height((20 + viewModel.largeText).dp)
+                                        .background(
+                                            color = animatedColor,
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable { persistent.setCategory(item) }, contentAlignment = Alignment.Center) {
                                         Text(text = item, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), textAlign = TextAlign.Center, fontSize = viewModel.largeText.sp, color = viewModel.oTextColour)
                                     }
                                 }
@@ -282,26 +303,43 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
             },
             //I've wrapped it up in a row class to allow for the adjusting of space
             content = { innerPadding ->
-                Row(modifier = Modifier.background(viewModel.secondBackColour).fillMaxWidth()) {
-                    LazyColumn(modifier = Modifier.padding(innerPadding).padding(end = rightInset).weight(1f)) {
+                Row(modifier = Modifier
+                    .background(viewModel.secondBackColour)
+                    .fillMaxWidth()) {
+                    LazyColumn(modifier = Modifier
+                        .padding(innerPadding)
+                        .padding(end = rightInset)
+                        .weight(1f)) {
                         itemsIndexed(displayedItems) { index, item ->
-                            Card(modifier = Modifier.fillMaxSize().padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 0.dp), colors = CardDefaults.cardColors(containerColor = viewModel.content, contentColor = viewModel.oTextColour)) {
-                                Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 0.dp), colors = CardDefaults.cardColors(containerColor = viewModel.content, contentColor = viewModel.oTextColour)) {
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(IntrinsicSize.Min)
+                                    .padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     //COUNT for item
                                     // Distribute available width equally among boxes
                                     // Fixed height for each box
-                                    Box(modifier = Modifier.weight(0.5f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                                    Box(modifier = Modifier
+                                        .weight(0.5f)
+                                        .fillMaxHeight(), contentAlignment = Alignment.Center) {
                                         Text(itemList[index].toString(), fontSize = viewModel.largeText.sp, color = viewModel.oTextColour)
                                     }
                                     //DESCRIPTION and PRICE for item
-                                    Box(modifier = Modifier.weight(4f).fillMaxHeight()) {
+                                    Box(modifier = Modifier
+                                        .weight(4f)
+                                        .fillMaxHeight()) {
             //                                    items(desserts) {
             //                                        ListItem(it)
             //                                    }
                                         ListItem(item)
                                     }
                                     //ACTION button ADD
-                                    Box(modifier = Modifier.weight(1f).fillMaxHeight().clickable(onClick = { itemList[index]++ }), contentAlignment = Alignment.Center) {
+                                    Box(modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .clickable(onClick = { itemList[index]++ }), contentAlignment = Alignment.Center) {
             //                                    IconButton(
             //                                        onClick = { }
             //                                    ) {
@@ -309,7 +347,10 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
             //                                    }
                                     }
                                     //ACTION button REMOVE
-                                    Box(modifier = Modifier.weight(1f).fillMaxHeight().clickable(onClick = { if (itemList[index] > 0) itemList[index]-- }), contentAlignment = Alignment.Center) {
+                                    Box(modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .clickable(onClick = { if (itemList[index] > 0) itemList[index]-- }), contentAlignment = Alignment.Center) {
             //                                    IconButton(
             //                                        onClick = {
             //                                            if (activeCount[index] > 0) activeCount[index]--
@@ -341,11 +382,17 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
                     val scrollState = rememberScrollState()
 
                     //scrollable column
-                    Column(modifier = Modifier.width(36.dp).fillMaxHeight().background(Color.Transparent).padding(innerPadding)) {
+                    Column(modifier = Modifier
+                        .width(36.dp)
+                        .fillMaxHeight()
+                        .background(Color.Transparent)
+                        .padding(innerPadding)) {
 
                         Spacer(modifier = Modifier.height(4.dp))
                         //UP ARROW button
-                        Box(modifier = Modifier.height(36.dp).fillMaxWidth()) {
+                        Box(modifier = Modifier
+                            .height(36.dp)
+                            .fillMaxWidth()) {
                             Surface(color = viewModel.scrollButtonColour, shape = RoundedCornerShape(12.dp)) {
                                 IconButton(onClick = { /**/ }) {
                                     Icon(modifier = Modifier.rotate(90f), imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Scroll Up", tint = viewModel.iconsColour)
@@ -354,7 +401,9 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
                         }
 
 
-                        Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+                        Box(modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f)) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -366,7 +415,9 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel) { //bac
                         }
 
                         //DOWN ARROW button
-                        Box(modifier = Modifier.height(36.dp).fillMaxWidth()) {
+                        Box(modifier = Modifier
+                            .height(36.dp)
+                            .fillMaxWidth()) {
                             Surface(color = viewModel.scrollButtonColour, shape = RoundedCornerShape(12.dp)) {
                                 IconButton(onClick = { /**/ }) {
                                     Icon(modifier = Modifier.rotate(-90f), imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Scroll Down", tint = viewModel.iconsColour)
@@ -550,16 +601,30 @@ fun CartContent(onClose: () -> Unit) {
 
 @Composable
 fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVisible: Boolean, accountVisible: Boolean, persistent: OrderViewModel) {
-    Box(modifier = Modifier.background(viewModel.bottomColour).fillMaxWidth()) {
+    Box(modifier = Modifier
+        .background(viewModel.bottomColour)
+        .fillMaxWidth()
+        .height(120.dp)
+    ) {
+
         //order button, separated from the row of other icons
         //place the button in the middle
         AnimatedVisibility(modifier = Modifier.align(Alignment.Center), visible = !optionsVisible && !accountVisible) {
             //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-            Surface(modifier = Modifier.zIndex(1f).offset(y = -(30).dp), color = viewModel.oButtonColour, shape = RoundedCornerShape(50.dp)) {
+            Surface(modifier = Modifier
+                .zIndex(1f)
+                .offset(y = -(30).dp), color = viewModel.oButtonColour, shape = RoundedCornerShape(50.dp)) {
                 //order
                 IconButton(onClick = { /**/ }, modifier = Modifier.size(100.dp)) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(text = persistent.totalOrderCount.value.toString(), fontSize = viewModel.largeText.sp, color = viewModel.oTextHighlightColour, modifier = Modifier.zIndex(1f).offset(y = (-20).dp),)
+                        Text(
+                            text = persistent.totalOrderCount.value.toString(),
+                            fontSize = viewModel.largeText.sp,
+                            color = viewModel.oTextHighlightColour,
+                            modifier = Modifier
+                                .zIndex(1f)
+                                .offset(y = (-20).dp)
+                        )
                         Column(modifier = Modifier.align(Alignment.Center)) {
                             Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Order", tint = viewModel.iconsColour, modifier = Modifier.size(50.dp))
                             Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
@@ -575,15 +640,25 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
         val scope = rememberCoroutineScope()
         var scrollOffset by remember { mutableStateOf(0f) }
 
-        Box(modifier = Modifier.zIndex(1f).matchParentSize()) {
+        //Scroll Box
+        Box(modifier = Modifier
+            .zIndex(1f)
+            .matchParentSize()) {
+
+            //Scroll Button
             AnimatedVisibility(
                 visible = scrollState.value > 0,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .zIndex(1f),
                 enter = fadeIn() + slideInHorizontally(),
                 exit = fadeOut() + slideOutHorizontally(),
             ) {
                 Surface(
                     color = viewModel.topColour,
-                    modifier = Modifier.align(Alignment.CenterStart).padding(4.dp),
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(4.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     IconButton(onClick = {
@@ -601,81 +676,10 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                     }
                 }
             }
-        }
 
-        //begin at start
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.Center)
-                .horizontalScroll(scrollState),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            settings(changeColour = false, scrollState = scrollState)
-            AnimatedVisibility(visible = !optionsVisible) {
-                Row {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    //Home
-                    Surface(
-                        color = viewModel.buttonColour,
-                        shape = RoundedCornerShape(12.dp)
-                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                    {
-                        IconButton(
-                            onClick = { navController.navigate("login") } // navigate to home
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "Home",
-                                tint = viewModel.iconsColour,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
-
-                    //make space for order button outside of row
-                    Spacer(modifier = Modifier.width(152.dp))
-
-                    Surface(
-                        color = viewModel.buttonColour,
-                        shape = RoundedCornerShape(12.dp)
-                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                    {
-                        IconButton(
-                            onClick = { navController.navigate("menu") }
-                        ) {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.menu),
-                                contentDescription = "Menu",
-                                tint = viewModel.iconsColour,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Surface(
-                        color = viewModel.buttonColour,
-                        shape = RoundedCornerShape(12.dp)
-                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-                    {
-                        IconButton(
-                            onClick = { navController.navigate("account") }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Account",
-                                tint = viewModel.iconsColour,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Box(modifier = Modifier.zIndex(1f).matchParentSize()) {
+            //Scroll Button
             AnimatedVisibility(
-                visible = scrollState.value <= scrollState.maxValue - 10 && (viewModel.themeOption || viewModel.languageOption),
+                visible = scrollState.value < scrollState.maxValue,
                 enter = fadeIn() + slideInHorizontally(),
                 exit = fadeOut() + slideOutHorizontally(),
                 modifier = Modifier.align(Alignment.CenterEnd)
@@ -702,6 +706,160 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                 }
             }
         }
+
+        //Buggy as, but it works ¯\_(ツ)_/¯
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min) // Ensures the Box is just tall enough for its content
+                .align(Alignment.Center),   // Vertically centers the content within the BottomAppBar
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedVisibility(visible = optionsVisible) {
+                // SCROLLING MENU (underlaps the other buttons)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState),
+                    //.align(Alignment.CenterStart)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Spacer(modifier = Modifier.width(24.dp))
+                    settings(changeColour = false, scrollState = scrollState)
+                }
+            }
+            //Other buttons surrounding order button
+            AnimatedVisibility(visible = !optionsVisible) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center)
+                        .horizontalScroll(scrollState),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Row(
+                        modifier = Modifier.weight(1f), // Takes up 1 part of the available space
+                        horizontalArrangement = Arrangement.SpaceAround // Distributes icons evenly
+                    ) {
+                        settings(changeColour = false, scrollState = scrollState)
+                        AnimatedVisibility(visible = !optionsVisible) {
+                            Surface(
+                                color = viewModel.buttonColour,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                IconButton(onClick = { navController.navigate("login") }) {
+                                    Icon(
+                                        Icons.Default.Home,
+                                        "Home",
+                                        tint = viewModel.iconsColour,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    //make space for the order button, fixed size
+                    Spacer(Modifier.width(124.dp))
+
+                    Row(
+                        modifier = Modifier.weight(1f), // Takes up 1 part of the available space
+                        horizontalArrangement = Arrangement.SpaceAround // Distributes icons evenly
+                    ) {
+                        AnimatedVisibility(visible = !optionsVisible) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Surface(
+                                    color = viewModel.buttonColour,
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    IconButton(onClick = { navController.navigate("menu") }) {
+                                        Icon(
+                                            ImageVector.vectorResource(id = R.drawable.menu),
+                                            "Menu",
+                                            tint = viewModel.iconsColour,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                }
+                                Surface(
+                                    color = viewModel.buttonColour,
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    IconButton(onClick = { navController.navigate("account") }) {
+                                        Icon(
+                                            Icons.Default.Person,
+                                            "Account",
+                                            tint = viewModel.iconsColour,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+//            settings(changeColour = false, scrollState = scrollState)
+//            AnimatedVisibility(visible = !optionsVisible) {
+//                Row {
+//                    Spacer(modifier = Modifier.width(6.dp))
+//                    //Home
+//                    Surface(
+//                        color = viewModel.buttonColour,
+//                        shape = RoundedCornerShape(12.dp)
+//                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+//                    {
+//                        IconButton(
+//                            onClick = { navController.navigate("login") } // navigate to home
+//                        ) {
+//                            Icon(
+//                                imageVector = Icons.Default.Home,
+//                                contentDescription = "Home",
+//                                tint = viewModel.iconsColour,
+//                                modifier = Modifier.size(48.dp)
+//                            )
+//                        }
+//                    }
+//
+//                    //make space for order button outside of row
+//                    Spacer(modifier = Modifier.width(152.dp))
+//
+//                    Surface(
+//                        color = viewModel.buttonColour,
+//                        shape = RoundedCornerShape(12.dp)
+//                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+//                    {
+//                        IconButton(
+//                            onClick = { navController.navigate("menu") }
+//                        ) {
+//                            Icon(
+//                                imageVector = ImageVector.vectorResource(id = R.drawable.menu),
+//                                contentDescription = "Menu",
+//                                tint = viewModel.iconsColour,
+//                                modifier = Modifier.size(48.dp)
+//                            )
+//                        }
+//                    }
+//                    Spacer(modifier = Modifier.width(6.dp))
+//                    Surface(
+//                        color = viewModel.buttonColour,
+//                        shape = RoundedCornerShape(12.dp)
+//                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
+//                    {
+//                        IconButton(
+//                            onClick = { navController.navigate("account") }
+//                        ) {
+//                            Icon(
+//                                imageVector = Icons.Default.Person,
+//                                contentDescription = "Account",
+//                                tint = viewModel.iconsColour,
+//                                modifier = Modifier.size(48.dp)
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+                }
+            }
+        }
     }
 }
-
