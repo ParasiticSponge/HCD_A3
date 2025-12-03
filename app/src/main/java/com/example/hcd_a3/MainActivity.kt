@@ -96,29 +96,16 @@ class MainActivity : ComponentActivity() {
                 val loginViewModel: LoginViewModel = viewModel()
                 val orderViewModel: OrderViewModel = viewModel()
 
-                NavHost(navController = navController, startDestination = "main_graph") {
-                    navigation(startDestination = "login", route = "main_graph") {
-                        composable("login") { backStackEntry ->
-//                            val parentEntry = remember(backStackEntry) {
-//                                navController.getBackStackEntry("main_graph")
-//                            }
-//                            val loginViewModel: LoginViewModel = viewModel(parentEntry)
-                            LoginScreen(navController, backStackEntry, loginViewModel)
-                        }
-                        composable("menu") { backStackEntry ->
-//                            val parentEntry = remember(backStackEntry) {
-//                                navController.getBackStackEntry("main_graph")
-//                            }
-//                            val loginViewModel: LoginViewModel = viewModel(parentEntry)
-                            MenuScreen(navController, orderViewModel, loginViewModel)
-                        }
-                        composable("account") { backStackEntry ->
-//                            val parentEntry = remember(backStackEntry) {
-//                                navController.getBackStackEntry("main_graph")
-//                            }
-//                            val loginViewModel: LoginViewModel = viewModel(parentEntry)
-                            AccountScreen(navController, loginViewModel)
-                        }
+                //https://stackoverflow.com/questions/68548488/sharing-viewmodel-within-jetpack-compose-navigation
+                NavHost(navController = navController, startDestination = "login") {
+                    composable("login") { backStackEntry ->
+                        LoginScreen(navController, backStackEntry, loginViewModel)
+                    }
+                    composable("menu") { backStackEntry ->
+                        MenuScreen(navController, orderViewModel, loginViewModel)
+                    }
+                    composable("account") { backStackEntry ->
+                        AccountScreen(navController, loginViewModel)
                     }
                 }
             }
@@ -144,7 +131,6 @@ fun GreetingPreview() {
 
 @Composable
 fun ListItem(item: FoodItem, viewModel: LoginViewModel) {
-    //val viewModel: LoginViewModel = viewModel()
     Column(modifier = Modifier.padding(8.dp)) {
         Text(
             text = item.name,

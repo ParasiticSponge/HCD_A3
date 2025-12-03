@@ -10,16 +10,17 @@ import android.util.Log
 
 class OrderViewModel : ViewModel() {
     val desserts = listOf(
-        FoodItem("cake", "chocolate base, chocolate icing", 10),
-        FoodItem("ice cream", "chocolate", 7))
+        FoodItem("Pukeko's Egg", "chocolate shell, caramel filling", 10),
+        FoodItem("Whipped Emu Egg", "emu eggshell, custard, fruit, spices", 7))
     val meals = listOf(
-        FoodItem("ramen", "egg, ramen noodles", 12),
-        FoodItem("pork bowl", "pork, seasoning", 15))
+        FoodItem("Crocodile Meat", "crocodile meat, peas, herbs, gravysauce", 12),
+        FoodItem("Salted Red Kangaroo", "red kangaroo, red peppers, garlic", 15),
+        FoodItem("Vegetarian", "cauliflower, corn, snow crab", 15))
     val entrees = listOf(
-        FoodItem("cake", "chocolate base, chocolate icing", 10),
-        FoodItem("ice cream", "chocolate", 7))
+        FoodItem("Greem Tree Ants", "green tree ants", 10),
+        FoodItem("Meat Pie", "beef, pastry", 7))
     val drinks = listOf(
-        FoodItem("wine", "grapes", 20),
+        FoodItem("Wine", "grapes", 20),
         FoodItem("Coca-Cola", "", 5))
     val menu = listOf("Entrees", "Meals", "Desserts", "Drinks", "Recommended")
 
