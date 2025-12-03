@@ -25,16 +25,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 @Composable
-fun AccountScreen(navController: NavController) {
-    val viewModel: LoginViewModel = viewModel()
+fun AccountScreen(navController: NavController, viewModel: LoginViewModel) {
     val orderViewModel: OrderViewModel = viewModel()
     val optionsVisible = viewModel.optionsVisible
     val accountVisible = viewModel.accountVisible
-    //optional: get rid of order button when account is clicked
-    //begin once on launch
-//    LaunchedEffect(Unit) {
-//        viewModel.toggleAccount()
-//    }
 
     Box(modifier = Modifier
         .fillMaxSize()) {

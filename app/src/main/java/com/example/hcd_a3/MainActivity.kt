@@ -75,6 +75,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.hcd_a3.ui.theme.HCD_A3Theme
 import kotlinx.coroutines.launch
@@ -91,49 +93,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             HCD_A3Theme {
                 val navController = rememberNavController()
-                val orderViewModel: OrderViewModel = viewModel(navController)
-                val viewModel: LoginViewModel = viewModel(navController)
+                val loginViewModel: LoginViewModel = viewModel()
+                val orderViewModel: OrderViewModel = viewModel()
 
-
-                NavHost(navController = navController, startDestination = "Login") {
-                    composable("login") { backStackEntry -> LoginScreen(navController, backStackEntry, viewModel)}
-                    composable ("menu") { MenuScreen(navController,orderViewModel, viewModel)}
-                    composable ("account") { AccountScreen(navController)}
-                    //composable ("test") { Tester(navController)}
+                NavHost(navController = navController, startDestination = "main_graph") {
+                    navigation(startDestination = "login", route = "main_graph") {
+                        composable("login") { backStackEntry ->
+//                            val parentEntry = remember(backStackEntry) {
+//                                navController.getBackStackEntry("main_graph")
+//                            }
+//                            val loginViewModel: LoginViewModel = viewModel(parentEntry)
+                            LoginScreen(navController, backStackEntry, loginViewModel)
+                        }
+                        composable("menu") { backStackEntry ->
+//                            val parentEntry = remember(backStackEntry) {
+//                                navController.getBackStackEntry("main_graph")
+//                            }
+//                            val loginViewModel: LoginViewModel = viewModel(parentEntry)
+                            MenuScreen(navController, orderViewModel, loginViewModel)
+                        }
+                        composable("account") { backStackEntry ->
+//                            val parentEntry = remember(backStackEntry) {
+//                                navController.getBackStackEntry("main_graph")
+//                            }
+//                            val loginViewModel: LoginViewModel = viewModel(parentEntry)
+                            AccountScreen(navController, loginViewModel)
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-//@Composable
-//fun Tester(navController: NavController) {
-//    Column {
-//        // Surface with default (0dp) tonal elevation
-//        Surface(
-//            modifier = Modifier,
-//            color = MaterialTheme.colorScheme.background
-//        ) {
-//            Text("Background Surface")
-//        }
-//
-//        // Surface with 3dp tonal elevation (e.g., a Navigation Bar)
-//        Surface(
-//            modifier = Modifier,
-//            tonalElevation = 3.dp
-//        ) {
-//            Text("Elevated Surface (e.g., Navigation Bar)")
-//        }
-//
-//        // Surface with higher tonal elevation (e.g., a Card)
-//        Surface(
-//            modifier = Modifier,
-//            tonalElevation = 8.dp
-//        ) {
-//            Text("Even More Elevated Surface (e.g., Card)")
-//        }
-//    }
-//}
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
@@ -151,8 +143,8 @@ fun GreetingPreview() {
 }
 
 @Composable
-fun ListItem(item: FoodItem) {
-    val viewModel: LoginViewModel = viewModel()
+fun ListItem(item: FoodItem, viewModel: LoginViewModel) {
+    //val viewModel: LoginViewModel = viewModel()
     Column(modifier = Modifier.padding(8.dp)) {
         Text(
             text = item.name,
@@ -175,22 +167,7 @@ fun ListItem(item: FoodItem) {
 @Composable
 fun MenuScreen(navController: NavController, persistent: OrderViewModel, viewModel: LoginViewModel) { //backStackEntry: NavBackStackEntry
     //    Log.w(tag, persistent.selectedCategory)
-//
-//    val aaa = listOf(
-//        FoodItem("cake", "chocolate base, chocolate icing", 10),
-//        FoodItem("ice cream", "chocolate", 7))
-//    val arrFinal = List(aaa.size, {0}).toMutableList()
-//    for (i in 0 until arrFinal.size) {
-//        arrFinal[i] = aaa[i].price
-//    }
-//    val arrFinal = List(7, {0})
-//    arrFinal.forEach { item ->  Log.w(tag, item.toString())}
-    //optional: get rid of order button when account is clicked
-//    LaunchedEffect(backStackEntry) {
-//        if (viewModel.accountVisible) viewModel.toggleAccount()
-//    }
 
-    val viewModel: LoginViewModel = viewModel()
     val optionsVisible = viewModel.optionsVisible
     val accountVisible = viewModel.accountVisible
 
@@ -291,7 +268,6 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel, viewMod
                                         Text(text = item, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), textAlign = TextAlign.Center, fontSize = viewModel.largeText.sp, color = viewModel.oTextColour)
                                     }
                                 }
-
                                 Spacer(modifier = Modifier.width(width))
                             }
                         }
@@ -333,7 +309,7 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel, viewMod
             //                                    items(desserts) {
             //                                        ListItem(it)
             //                                    }
-                                        ListItem(item)
+                                        ListItem(item, viewModel)
                                     }
                                     //ACTION button ADD
                                     Box(modifier = Modifier
@@ -351,33 +327,12 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel, viewMod
                                         .weight(1f)
                                         .fillMaxHeight()
                                         .clickable(onClick = { if (itemList[index] > 0) itemList[index]-- }), contentAlignment = Alignment.Center) {
-            //                                    IconButton(
-            //                                        onClick = {
-            //                                            if (activeCount[index] > 0) activeCount[index]--
-            //                                        }
-            //                                    ) {
                                         Icon(ImageVector.vectorResource(id = R.drawable.subtract), contentDescription = "Remove", modifier = Modifier.size(24.dp))
-            //                                    }
                                     }
                                 }
                             }
                         }
                     }
-
-            //                AnimatedVisibility(visible = cartVisible) {
-            //                    Column(
-            //                        modifier = Modifier
-            //                            .width(56.dp)
-            //                            .fillMaxHeight()
-            //                            .background(Color.Transparent),
-            //                        verticalArrangement = Arrangement.Center,
-            //                        horizontalAlignment = Alignment.CenterHorizontally
-            //                    ) {
-            //                        CartButton(count = totalOrderCount.value) {
-            //                            cartExpanded.value = true
-            //                        }
-            //                    }
-            //                }
 
                     val scrollState = rememberScrollState()
 
@@ -446,140 +401,6 @@ fun MenuScreen(navController: NavController, persistent: OrderViewModel, viewMod
         )
     }
 }
-
-//content = { innerPadding ->
-//    //I've wrapped it up in a row class to allow for the adjusting of space
-//    Row(modifier = Modifier.background(viewModel.secondBackColour).fillMaxWidth()) {
-//        LazyColumn(modifier = Modifier.padding(innerPadding).padding(end = rightInset).weight(1f)) {
-//            itemsIndexed(displayedItems) { index, item ->
-//                Card(modifier = Modifier.fillMaxSize().padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 0.dp), colors = CardDefaults.cardColors(containerColor = viewModel.content, contentColor = viewModel.oTextColour)) {
-//                    Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-//                        //COUNT for item
-//                        // Distribute available width equally among boxes
-//                        // Fixed height for each box
-//                        Box(modifier = Modifier.weight(0.5f).fillMaxHeight(), contentAlignment = Alignment.Center) {
-//                            Text(itemList[index].toString(), fontSize = viewModel.largeText.sp, color = viewModel.oTextColour)
-//                        }
-//                        //DESCRIPTION and PRICE for item
-//                        Box(modifier = Modifier.weight(4f).fillMaxHeight()) {
-////                                    items(desserts) {
-////                                        ListItem(it)
-////                                    }
-//                            ListItem(item)
-//                        }
-//                        //ACTION button ADD
-//                        Box(modifier = Modifier.weight(1f).fillMaxHeight().clickable(onClick = { itemList[index]++ }), contentAlignment = Alignment.Center) {
-////                                    IconButton(
-////                                        onClick = { }
-////                                    ) {
-//                            Icon(Icons.Default.Add, contentDescription = "Add")
-////                                    }
-//                        }
-//                        //ACTION button REMOVE
-//                        Box(modifier = Modifier.weight(1f).fillMaxHeight().clickable(onClick = { if (itemList[index] > 0) itemList[index]-- }), contentAlignment = Alignment.Center) {
-////                                    IconButton(
-////                                        onClick = {
-////                                            if (activeCount[index] > 0) activeCount[index]--
-////                                        }
-////                                    ) {
-//                            Icon(ImageVector.vectorResource(id = R.drawable.subtract), contentDescription = "Remove", modifier = Modifier.size(24.dp))
-////                                    }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-////                AnimatedVisibility(visible = cartVisible) {
-////                    Column(
-////                        modifier = Modifier
-////                            .width(56.dp)
-////                            .fillMaxHeight()
-////                            .background(Color.Transparent),
-////                        verticalArrangement = Arrangement.Center,
-////                        horizontalAlignment = Alignment.CenterHorizontally
-////                    ) {
-////                        CartButton(count = totalOrderCount.value) {
-////                            cartExpanded.value = true
-////                        }
-////                    }
-////                }
-//        //scrollable column
-//        Column(modifier = Modifier.width(36.dp).fillMaxHeight().background(Color.Transparent).padding(innerPadding)) {
-//            Spacer(modifier = Modifier.height(4.dp))
-//            //UP ARROW button
-//            Box(modifier = Modifier.height(36.dp).fillMaxWidth()) {
-//                Surface(color = viewModel.buttonColour, shape = RoundedCornerShape(12.dp)) {
-//                    IconButton(onClick = { /**/ }) {
-//                        Icon(modifier = Modifier.rotate(90f), imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Scroll Up", tint = viewModel.iconsColour)
-//                    }
-//                }
-//            }
-//            Box(modifier = Modifier.fillMaxSize().weight(1f)) {
-//            }
-//
-//            //DOWN ARROW button
-//            Box(modifier = Modifier.height(36.dp).fillMaxWidth()) {
-//                Surface(color = viewModel.buttonColour, shape = RoundedCornerShape(12.dp)) {
-//                    IconButton(onClick = { /**/ }) {
-//                        Icon(modifier = Modifier.rotate(-90f), imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Scroll Down", tint = viewModel.iconsColour)
-//                    }
-//                }
-//            }
-//            Spacer(modifier = Modifier.height(4.dp))
-//        }
-//    }
-//}
-
-//    //Order Screen
-//    if (cartExpanded.value) {
-//        Box(
-//            Modifier
-//                //.align(Alignment.CenterEnd)
-//                .fillMaxHeight()
-//                .width(screenWidth * 0.8f)
-//                .background(Color.White)
-//        ) {
-//            CartContent(
-//                onClose = { cartExpanded.value = false }
-//            )
-//        }
-//    }
-
-
-//@Composable
-//fun CartButton(count: Int, onClick: () -> Unit) {
-//    val viewModel: LoginViewModel = viewModel()
-////    Box(
-////        modifier = Modifier
-////            .padding(4.dp)
-////            .clickable { onClick() }
-////            .background(Color.White, RoundedCornerShape(8.dp))
-////    ) {
-////        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-////            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
-////            if (count > 0) {
-////                Text(count.toString(), color = Color.Red, fontSize = viewModel.largeText.sp)
-////            }
-////        }
-////    }
-//    Surface(
-//        modifier = Modifier
-//            .clickable { onClick() },
-//            //.background(Color.White, RoundedCornerShape(8.dp))
-//        shape = RoundedCornerShape(8.dp),
-//        color = Color.White
-//    ) {
-//        Column(
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            modifier = Modifier.padding(12.dp)) {
-//            Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
-//            if (count > 0) {
-//                Text(count.toString(), color = Color.Red, fontSize = viewModel.largeText.sp)
-//            }
-//        }
-//    }
-//}
 
 @Composable
 fun CartContent(onClose: () -> Unit) {
@@ -725,7 +546,7 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Spacer(modifier = Modifier.width(24.dp))
-                    settings(changeColour = false, scrollState = scrollState)
+                    settings(viewModel = viewModel, changeColour = false, scrollState = scrollState)
                 }
             }
             //Other buttons surrounding order button
@@ -742,7 +563,7 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                         modifier = Modifier.weight(1f), // Takes up 1 part of the available space
                         horizontalArrangement = Arrangement.SpaceAround // Distributes icons evenly
                     ) {
-                        settings(changeColour = false, scrollState = scrollState)
+                        settings(viewModel = viewModel, changeColour = false, scrollState = scrollState)
                         AnimatedVisibility(visible = !optionsVisible) {
                             Surface(
                                 color = viewModel.buttonColour,
@@ -798,66 +619,6 @@ fun bottomBar(navController: NavController, viewModel: LoginViewModel, optionsVi
                             }
                         }
                     }
-//            settings(changeColour = false, scrollState = scrollState)
-//            AnimatedVisibility(visible = !optionsVisible) {
-//                Row {
-//                    Spacer(modifier = Modifier.width(6.dp))
-//                    //Home
-//                    Surface(
-//                        color = viewModel.buttonColour,
-//                        shape = RoundedCornerShape(12.dp)
-//                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-//                    {
-//                        IconButton(
-//                            onClick = { navController.navigate("login") } // navigate to home
-//                        ) {
-//                            Icon(
-//                                imageVector = Icons.Default.Home,
-//                                contentDescription = "Home",
-//                                tint = viewModel.iconsColour,
-//                                modifier = Modifier.size(48.dp)
-//                            )
-//                        }
-//                    }
-//
-//                    //make space for order button outside of row
-//                    Spacer(modifier = Modifier.width(152.dp))
-//
-//                    Surface(
-//                        color = viewModel.buttonColour,
-//                        shape = RoundedCornerShape(12.dp)
-//                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-//                    {
-//                        IconButton(
-//                            onClick = { navController.navigate("menu") }
-//                        ) {
-//                            Icon(
-//                                imageVector = ImageVector.vectorResource(id = R.drawable.menu),
-//                                contentDescription = "Menu",
-//                                tint = viewModel.iconsColour,
-//                                modifier = Modifier.size(48.dp)
-//                            )
-//                        }
-//                    }
-//                    Spacer(modifier = Modifier.width(6.dp))
-//                    Surface(
-//                        color = viewModel.buttonColour,
-//                        shape = RoundedCornerShape(12.dp)
-//                    ) //acts as a visual container for other UI elements and automatically handles aspects like background color, elevation, shape, and content color
-//                    {
-//                        IconButton(
-//                            onClick = { navController.navigate("account") }
-//                        ) {
-//                            Icon(
-//                                imageVector = Icons.Default.Person,
-//                                contentDescription = "Account",
-//                                tint = viewModel.iconsColour,
-//                                modifier = Modifier.size(48.dp)
-//                            )
-//                        }
-//                    }
-//                }
-//            }
                 }
             }
         }

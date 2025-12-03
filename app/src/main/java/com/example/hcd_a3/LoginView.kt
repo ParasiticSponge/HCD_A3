@@ -66,7 +66,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavController, backStackEntry: NavBackStackEntry, viewModel: LoginViewModel) {
-    val viewModel: LoginViewModel = viewModel()
+    //val viewModel: LoginViewModel = viewModel()
     val largeText = viewModel.largeText
     val smallText = viewModel.smallText
 
@@ -224,7 +224,7 @@ fun LoginScreen(navController: NavController, backStackEntry: NavBackStackEntry,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.width(24.dp))
-                    settings(changeColour = true, scrollState = scrollState)
+                    settings(viewModel = viewModel, changeColour = true, scrollState = scrollState)
                 }
 
                 Box(modifier = Modifier.zIndex(1f).matchParentSize()) {
@@ -261,7 +261,7 @@ fun LoginScreen(navController: NavController, backStackEntry: NavBackStackEntry,
 }
 
 @Composable
-fun settings(viewModel: LoginViewModel = viewModel(), changeColour: Boolean, scrollState: ScrollState) {
+fun settings(viewModel: LoginViewModel, changeColour: Boolean, scrollState: ScrollState) {
     val languageOption = viewModel.languageOption
     val themeOption = viewModel.themeOption
     val optionsVisible = viewModel.optionsVisible
